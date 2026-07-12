@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Olomouc · Guía Erasmus</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+  :root{
+    --sandstone:#EFE6D6;
+    --sandstone-dim:#E3D8C4;
+    --ink:#1C2431;
+    --ink-soft:#2A3446;
+    --wine:#7A2434;
+    --gold:#B8935B;
+    --slate:#52606D;
+    --paper:#FBF8F2;
+
+    --c-bar:#7A2434;
+    --c-club:#B0246B;
+    --c-gym:#1F7A5C;
+    --c-dorm:#2C4A7C;
+    --c-market:#4C7A2C;
+    --c-restaurant:#B5651D;
+    --c-cafe:#6B4226;
+    --c-park:#2F7D46;
+    --c-landmark:#C9A227;
+    --c-faculty:#4A4E9E;
+    --c-museum:#8E44AD;
+    --c-church:#8C6239;
+    --c-viewpoint:#1F8A9E;
+    --c-daytrip:#C1553A;
+    --c-freetour:#E08E2B;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--ink);color:var(--paper);overflow:hidden;}
+
+  #app{position:relative;width:100vw;height:100vh;display:flex;}
+
+  /* ---------- HEADER ---------- */
+  #header{
+    position:absolute;top:0;left:0;right:0;z-index:20;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 22px;
+    background:linear-gradient(180deg, rgba(28,36,49,0.92) 10%, rgba(28,36,49,0));
+    pointer-events:none;
+  }
+  #header .brand{display:flex;align-items:baseline;gap:10px;pointer-events:auto;}
+  #header h1{
+    font-family:Georgia,'Times New Roman',serif;font-weight:700;font-size:22px;letter-spacing:0.5px;
+    margin:0;color:var(--sandstone);
+  }
+  #header .clockmark{
+    width:26px;height:26px;border-radius:50%;border:1.5px solid var(--gold);
+    position:relative;flex-shrink:0;
+  }
+  #header .clockmark::before{
+    content:'';position:absolute;top:50%;left:50%;width:1.5px;height:8px;
+    background:var(--gold);transform-origin:bottom center;
+    animation:tick 6s linear infinite;transform:translate(-50%,-100%);
+  }
+  #header .clockmark::after{
+    content:'';position:absolute;top:50%;left:50%;width:1.5px;height:6px;
+    background:var(--wine);transform-origin:bottom center;
+    animation:tick 43s linear infinite;transform:translate(-50%,-100%);
+  }
+  @keyframes tick{from{transform:translate(-50%,-100%) rotate(0deg);}to{transform:translate(-50%,-100%) rotate(360deg);}}
+  #header .sub{
+    font-size:11.5px;color:var(--sandstone-dim);letter-spacing:1.5px;text-transform:uppercase;
+    pointer-events:auto;opacity:0.85;
+  }
+  #sidebarToggle{
+    pointer-events:auto;background:var(--ink-soft);border:1px solid rgba(184,147,91,0.4);
+    color:var(--sandstone);width:38px;height:38px;border-radius:8px;cursor:pointer;
+    display:none;align-items:center;justify-content:center;font-size:16px;
+  }
+
+  /* ---------- SIDEBAR ---------- */
+  #sidebar{
+    position:relative;z-index:15;width:340px;min-width:340px;height:100vh;
+    background:var(--paper);color:var(--ink);
+    display:flex;flex-direction:column;
+    box-shadow:2px 0 24px rgba(0,0,0,0.35);
+    transition:margin-left 0.3s ease;
+  }
+  #sidebar .sb-inner{padding-top:76px;display:flex;flex-direction:column;height:100%;overflow:hidden;}
+
+  #searchWrap{padding:0 18px 12px;}
+  #searchBox{
+    width:100%;padding:10px 14px;border-radius:8px;border:1px solid #d9cfba;
+    background:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;color:var(--ink);outline:none;
+  }
+  #searchBox:focus{border-color:var(--gold);}
+
+  #filters{padding:0 18px 14px;display:flex;flex-wrap:wrap;gap:6px;border-bottom:1px solid #e2d9c6;}
+  .chip{
+    display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;
+    font-size:12px;font-weight:600;cursor:pointer;user-select:none;
+    border:1.4px solid transparent;background:#f1ead9;color:var(--slate);
+    transition:all 0.15s ease;
+  }
+  .chip .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .chip.active{background:var(--ink);color:var(--paper);}
+  .chip:hover{transform:translateY(-1px);}
+
+  #listMeta{padding:12px 18px 6px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--slate);font-weight:600;}
+
+  #placeList{flex:1;overflow-y:auto;padding:0 12px 20px;}
+  #placeList::-webkit-scrollbar{width:6px;}
+  #placeList::-webkit-scrollbar-thumb{background:#d9cfba;border-radius:3px;}
+
+  .place-card{
+    display:flex;gap:10px;padding:10px 10px;border-radius:10px;cursor:pointer;
+    border:1px solid transparent;margin-bottom:4px;
+  }
+  .place-card:hover{background:#f1ead9;}
+  .place-card.selected{background:#ece2cb;border-color:var(--gold);}
+  .place-card .catbar{width:4px;border-radius:3px;flex-shrink:0;}
+  .place-card .pc-body{flex:1;min-width:0;}
+  .place-card .pc-name{font-weight:700;font-size:13.5px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .place-card .pc-meta{font-size:11.5px;color:var(--slate);margin-top:2px;display:flex;gap:8px;align-items:center;}
+  .pc-rating{color:var(--gold);font-weight:700;}
+
+  #legend-note{
+    padding:12px 18px 16px;font-size:11px;color:var(--slate);border-top:1px solid #e2d9c6;line-height:1.5;
+  }
+  #legend-note b{color:var(--ink);}
+
+  /* ---------- MAP ---------- */
+  #map{flex:1;height:100vh;position:relative;}
+
+  .pin{
+    width:26px;height:26px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);
+    border:2px solid rgba(255,255,255,0.85);box-shadow:0 2px 6px rgba(0,0,0,0.45);
+    display:flex;align-items:center;justify-content:center;cursor:pointer;
+    transition:transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease, filter 0.2s ease;
+  }
+  .pin span{transform:rotate(45deg);font-size:12px;}
+  .pin.big{width:34px;height:34px;}
+  .pin:hover{transform:rotate(-45deg) scale(1.15);}
+
+  .pin.pin-highlight{
+    width:38px;height:38px;
+    box-shadow:0 0 0 6px rgba(255,255,255,0.18), 0 0 22px 6px currentColor, 0 2px 10px rgba(0,0,0,0.5);
+    border-width:3px;
+    animation:pinPulse 1.6s ease-in-out infinite;
+    z-index:1000 !important;
+  }
+  .pin.pin-highlight span{font-size:16px;}
+  .pin.pin-dim{opacity:0.32;filter:grayscale(35%);transform:rotate(-45deg) scale(0.85);}
+  .pin.pin-dim:hover{opacity:0.7;}
+  @keyframes pinPulse{
+    0%,100%{box-shadow:0 0 0 6px rgba(255,255,255,0.18), 0 0 18px 4px currentColor, 0 2px 10px rgba(0,0,0,0.5);}
+    50%{box-shadow:0 0 0 9px rgba(255,255,255,0.1), 0 0 30px 10px currentColor, 0 2px 10px rgba(0,0,0,0.5);}
+  }
+
+  .place-card.cat-highlight{border-color:var(--gold);background:#fbf2df;box-shadow:0 0 0 1px var(--gold) inset;}
+  .place-card.cat-dim{opacity:0.45;}
+
+  .leaflet-popup-content-wrapper{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;border-radius:12px;
+    background:var(--paper);color:var(--ink);box-shadow:0 8px 30px rgba(0,0,0,0.4);
+  }
+  .leaflet-popup-content{margin:14px 16px;line-height:1.4;}
+  .leaflet-popup-tip{background:var(--paper) !important;}
+  .pop-cat{font-size:10.5px;letter-spacing:1px;text-transform:uppercase;font-weight:700;margin-bottom:4px;}
+  .pop-name{font-family:Georgia,'Times New Roman',serif;font-weight:700;font-size:17px;margin:0 0 4px;color:var(--ink);}
+  .pop-addr{font-size:12px;color:var(--slate);margin-bottom:6px;line-height:1.4;}
+  .pop-row{font-size:12.5px;color:var(--ink);margin-bottom:2px;}
+  .pop-btn{
+    margin-top:10px;display:inline-block;background:var(--ink);color:var(--paper);
+    padding:8px 14px;border-radius:7px;font-size:12.5px;font-weight:600;text-decoration:none;
+  }
+  .pop-btn:hover{background:var(--wine);}
+
+  #mapControls{
+    position:absolute;bottom:22px;right:16px;z-index:10;display:flex;flex-direction:column;gap:8px;
+  }
+  .ctrl-btn{
+    background:rgba(28,36,49,0.88);color:var(--sandstone);border:1px solid rgba(184,147,91,0.4);
+    padding:8px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:600;
+  }
+  .ctrl-btn:hover{background:var(--wine);}
+
+  #welcomeCard{
+    position:absolute;bottom:20px;left:20px;z-index:10;max-width:280px;
+    background:rgba(28,36,49,0.92);border:1px solid rgba(184,147,91,0.35);
+    border-radius:12px;padding:14px 16px;font-size:12px;color:var(--sandstone-dim);line-height:1.5;
+  }
+  #welcomeCard b{color:var(--gold);}
+  #welcomeCard .close{float:right;cursor:pointer;color:var(--sandstone-dim);opacity:0.6;}
+
+  @media (max-width:820px){
+    #sidebar{position:absolute;left:0;top:0;z-index:25;margin-left:-340px;}
+    #sidebar.open{margin-left:0;}
+    #sidebarToggle{display:flex;}
+    #welcomeCard{display:none;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div id="sidebar">
+    <div class="sb-inner">
+      <div id="searchWrap"><input id="searchBox" type="text" placeholder="Buscar un sitio…"></div>
+      <div id="filters"></div>
+      <div id="listMeta"><span id="countLabel">0</span> sitios</div>
+      <div id="placeList"></div>
+      <div id="legend-note"><b>Tip:</b> pulsa una categoría para que sus pines brillen y se agranden en el mapa (el resto se atenúa, pero sigue ahí). Pulsa un sitio de la lista o un pin para ver horarios, valoración y cómo llegar.</div>
+    </div>
+  </div>
+
+  <div id="map">
+    <div id="mapControls">
+      <button class="ctrl-btn" id="btnReset">Centrar ciudad</button>
+    </div>
+    <div id="welcomeCard">
+      <span class="close" id="closeWelcome">✕</span>
+      <b>Olomouc, al detalle</b><br>
+      Bares, discotecas, gimnasios, residencias, facultades, museos, iglesias, miradores y excursiones cercanas — todo lo esencial para tu Erasmus en un mapa real.
+    </div>
+  </div>
+
+  <div id="header">
+    <div class="brand">
+      <div class="clockmark"></div>
+      <div>
+        <h1>OLOMOUC</h1>
+        <div class="sub">Guía interactiva · Erasmus 2026/27</div>
+      </div>
+    </div>
+    <button id="sidebarToggle">☰</button>
+  </div>
+
+</div>
+
+<script>
+const CATS = {
+  bar:         {label:"Bares",             icon:"🍸", color:"var(--c-bar)"},
+  club:        {label:"Discotecas",        icon:"🪩", color:"var(--c-club)"},
+  gym:         {label:"Gimnasios",         icon:"💪", color:"var(--c-gym)"},
+  dorm:        {label:"Residencias",       icon:"🏠", color:"var(--c-dorm)"},
+  faculty:     {label:"Facultades UP",     icon:"🎓", color:"var(--c-faculty)"},
+  market:      {label:"Supermercados",     icon:"🛒", color:"var(--c-market)"},
+  restaurant:  {label:"Restaurantes",      icon:"🍽️", color:"var(--c-restaurant)"},
+  cafe:        {label:"Cafés",             icon:"☕", color:"var(--c-cafe)"},
+  park:        {label:"Parques",           icon:"🌳", color:"var(--c-park)"},
+  landmark:    {label:"Puntos de interés", icon:"🏛️", color:"var(--c-landmark)"},
+  museum:      {label:"Museos",            icon:"🖼️", color:"var(--c-museum)"},
+  church:      {label:"Iglesias",          icon:"⛪", color:"var(--c-church)"},
+  viewpoint:   {label:"Miradores y montaña", icon:"⛰️", color:"var(--c-viewpoint)"},
+  daytrip:     {label:"Excursiones",       icon:"🚗", color:"var(--c-daytrip)"},
+  freetour:    {label:"Free tours",        icon:"🧭", color:"var(--c-freetour)"}
+};
+
+const PLACES = [
+  // BARES
+  {name:"Cocktails & Dreams", cat:"bar", lat:49.5918007, lng:17.251112, rating:4.5, addr:"Uhelná 1186/8", hours:"Cierra ~2:30–3:30", note:"Ambiente años 50 americano, cócteles de autor."},
+  {name:"Fashion Cocktail Bar", cat:"bar", lat:49.5918626, lng:17.2512040, rating:4.9, addr:"Uhelná 1186/8", hours:"Cierra ~2:00–3:00", note:"El mejor valorado de la ciudad, cócteles a medida."},
+  {name:"Jerry's Bar", cat:"bar", lat:49.5936313, lng:17.2522220, rating:4.8, addr:"Horní nám. 202", hours:"Cierra ~2:00", note:"Cerveza artesana y buen ambiente en la plaza."},
+  {name:"The Black Stuff Irish Pub", cat:"bar", lat:49.5970496, lng:17.2614051, rating:4.8, addr:"1. máje 807", hours:"Cierra ~1:00–2:00 (cerrado dom)", note:"Pub irlandés en una cuadra del siglo XVI, gran selección de whisky."},
+  {name:"Bar Zahrada", cat:"bar", lat:49.5901173, lng:17.2530631, rating:4.8, addr:"Mlýnská 79", hours:"14:00–00:00", note:"Terraza con jardín, cerveza barata y música en vivo."},
+  {name:"Cuban Cocktail Bar OSA", cat:"bar", lat:49.5946268, lng:17.2540040, rating:4.8, addr:"Mahlerova 240/15", hours:"Cierra ~00:00 (cerrado dom)", note:"Escondido en un callejón, ambiente cubano y ron."},
+  {name:"Vertigo – studentský klub", cat:"bar", lat:49.5952995, lng:17.2552141, rating:4.5, addr:"Univerzitní nám. 6", hours:"18:00–2:00", note:"El bar de estudiantes más famoso de Olomouc. Prueba el shot 'vzteklej pes'."},
+  {name:"Blues Bar Garch", cat:"bar", lat:49.5958292, lng:17.2384846, rating:4.5, addr:"Litovelská 15/114", hours:"17:00–23:00 (vie/sáb hasta 1:00)", note:"Conciertos en vivo, ambiente relajado tipo pub."},
+
+  // DISCOTECAS
+  {name:"Vertigo Club (planta baja)", cat:"club", lat:49.5952995, lng:17.2552141, rating:4.5, addr:"Univerzitní nám. 6", hours:"18:00–2:00", note:"Doble uso: bar de estudiantes + pista de baile."},
+  {name:"Belmondo Club", cat:"club", lat:49.5908050, lng:17.2514305, rating:4.0, addr:"Mlýnská 938/4", hours:"Jue–sáb 22:00–5:00/6:00", note:"La discoteca más grande. Seguridad estricta con el ISIC/DNI."},
+  {name:"S-klub", cat:"club", lat:49.5939857, lng:17.2622810, rating:4.3, addr:"17. listopadu 43", hours:"Según evento", note:"Sala de conciertos y eventos, buen sonido."},
+  {name:"Varna Club", cat:"club", lat:49.5944643, lng:17.2490528, rating:3.5, addr:"Riegrova 9/6", hours:"Jue–sáb 22:00–5:00", note:"Club moderno, terraza y comida. Verifica normas de acceso para extranjeros."},
+  {name:"Meex Club", cat:"club", lat:49.5930395, lng:17.2511150, rating:3.7, addr:"Horní nám. 12/19", hours:"Fin de semana", note:"Decoración temática, ambiente universitario."},
+  {name:"Bocca Club", cat:"club", lat:49.5964013, lng:17.2583704, rating:3.3, addr:"1. máje 825/4", hours:"Vie–sáb 21:00/22:00–6:00", note:"Fiestas de fin de semana."},
+
+  // GIMNASIOS
+  {name:"Legends Gym Olomouc", cat:"gym", lat:49.6000475, lng:17.2674527, rating:4.8, addr:"Sokolovská 80/4", hours:"L–V 6:00–21:00, S–D 8:00–20:00", note:"Bien equipado, también zona de artes marciales."},
+  {name:"Eurogym Fitness", cat:"gym", lat:49.5892524, lng:17.2338027, rating:4.5, addr:"Stupkova 18/952", hours:"L–V 6:00–00:00, S–D 7:00–22:00", note:"Acepta Multisport, buen precio para estudiantes."},
+  {name:"Hideout Gym 24/7", cat:"gym", lat:49.5989313, lng:17.2341561, rating:4.6, addr:"Tř. Jiřího Pelikána 9/1401", hours:"Abierto 24h", note:"Acceso por código, gimnasio privado y moderno."},
+  {name:"Solo-Gym (autoservicio)", cat:"gym", lat:49.5925044, lng:17.2513251, rating:5.0, addr:"Uhelná 1189/7", hours:"Abierto 24h", note:"Gimnasio privado 24h con ducha, cerca del centro."},
+  {name:"Infitness", cat:"gym", lat:49.5805453, lng:17.2560652, rating:4.1, addr:"Velkomoravská 590/50", hours:"L–V 6:30–22:00, S–D 8:00–21:00", note:"Buen precio y equipamiento completo, entrenadores disponibles."},
+
+  // RESIDENCIAS
+  {name:"J. L. Fischer Dormitory", cat:"dorm", lat:49.5925116, lng:17.2661559, rating:4.1, addr:"Šmeralova 1116/10", hours:"24h", note:"Junto al río, tranquilo, cerca de la universidad."},
+  {name:"Kolej UP Generála Svobody", cat:"dorm", lat:49.5918510, lng:17.2649684, rating:4.3, addr:"Šmeralova 1122", hours:"24h", note:"Zona verde junto al río, 7-10 min a pie del centro."},
+  {name:"Kolej UPOL Šmeralova", cat:"dorm", lat:49.5941008, lng:17.2665114, rating:3.7, addr:"Šmeralova 1084/6", hours:"24h", note:"Habitaciones compartidas económicas, muy popular entre Erasmus."},
+  {name:"Kolej Evžena Rošického", cat:"dorm", lat:49.6025835, lng:17.2486500, rating:4.6, addr:"U Sportovní haly 40/4", hours:"24h", note:"Considerada de las mejores residencias, buena ubicación."},
+
+  // SUPERMERCADOS
+  {name:"Tesco", cat:"market", lat:49.5751494, lng:17.2283489, rating:4.0, addr:"Kafkova 1223/8", hours:"6:00–22:00", note:"Hipermercado, algo alejado del centro."},
+  {name:"Albert (Polská)", cat:"market", lat:49.5864602, lng:17.2589224, rating:4.1, addr:"Polská 1", hours:"7:00–22:00", note:"Céntrico, dentro del centro comercial."},
+  {name:"Globus Olomouc", cat:"market", lat:49.6015311, lng:17.2230799, rating:4.4, addr:"Pražská 248/39", hours:"7:00–21:00", note:"El mejor valorado, buena panadería y carnicería."},
+  {name:"Billa", cat:"market", lat:49.5909255, lng:17.2335352, rating:4.0, addr:"Dobnerova 1195/27", hours:"7:00–21:00 (dom 8:00–21:00)", note:"Cerca de la zona de residencias de Nová Ulice."},
+  {name:"Albert (Kosmonautů)", cat:"market", lat:49.5918057, lng:17.2742127, rating:3.8, addr:"Tř. Kosmonautů 113/27", hours:"7:00–21:00", note:"Cerca de la estación de tren."},
+
+  // RESTAURANTES
+  {name:"Restaurant U Mořice", cat:"restaurant", lat:49.5947078, lng:17.2517126, rating:4.6, addr:"Opletalova 364/1", hours:"11:00–00:00", note:"Comida checa clásica, buena relación calidad-precio. Prueba el 'kulajda'."},
+  {name:"Drapal Restaurant", cat:"restaurant", lat:49.5916255, lng:17.2495384, rating:4.5, addr:"Havlíčkova 637/1", hours:"11:00–00:00", note:"Cervecería tradicional muy popular, reserva recomendada."},
+  {name:"Moravská restaurace", cat:"restaurant", lat:49.5935623, lng:17.2503349, rating:4.5, addr:"Horní nám. 23", hours:"11:30–22:00", note:"Vistas a la plaza principal, cocina morava tradicional."},
+  {name:"Restaurace Stodola", cat:"restaurant", lat:49.5954789, lng:17.2392953, rating:4.5, addr:"Litovelská 77/7", hours:"11:00–23:00/00:00", note:"Comida checa contundente, buen ambiente informal."},
+  {name:"Long Story Short Eatery & Bakery", cat:"restaurant", lat:49.5976250, lng:17.2586546, rating:4.6, addr:"Koželužská 31c/945", hours:"8:00–22:00/23:00", note:"Patio tranquilo, cocina cuidada, buenas limonadas caseras."},
+  {name:"Entrée Restaurant", cat:"restaurant", lat:49.5896897, lng:17.2870058, rating:4.7, addr:"Ostravská 1/975", hours:"11:00–14:00, 17:00–23:00", note:"Alta cocina, ideal para una ocasión especial."},
+  {name:"STeaK Restaurant Olomouc", cat:"restaurant", lat:49.5911911, lng:17.2866573, rating:4.8, addr:"Lipenská 11/7", hours:"11:00–23:00", note:"Carnes maduradas, sala de dry-aging visible."},
+
+  // CAFÉS
+  {name:"Café La Fée", cat:"cafe", lat:49.5948447, lng:17.2526697, rating:4.6, addr:"Ostružnická 13", hours:"8:00–21:00 (dom 9:00–19:00)", note:"Jardín interior con mantas, desayunos muy recomendados."},
+  {name:"Sophie's Café", cat:"cafe", lat:49.5958782, lng:17.2552836, rating:4.6, addr:"Denisova 292/33", hours:"7:00–22:00", note:"Ambiente acogedor, menú en inglés, wifi gratis."},
+  {name:"Cafe New One", cat:"cafe", lat:49.5939446, lng:17.2481449, rating:4.4, addr:"Tř. Svobody 21", hours:"7:30–20:00/22:00/23:00", note:"Brunch y cócteles, interior muy cuidado."},
+  {name:"Great Coffee & Wine", cat:"cafe", lat:49.5881246, lng:17.2594414, rating:4.7, addr:"Šantova 1222/7", hours:"7:00–21:00", note:"Café y vino en un mismo sitio, buen espacio para estudiar."},
+  {name:"Elite Café & Wine Bar", cat:"cafe", lat:49.5929205, lng:17.2471792, rating:5.0, addr:"Dánská 1148/5", hours:"7:30–20:00/22:00 (cerrado dom)", note:"Interior moderno, muy buen café de especialidad."},
+  {name:"Vnitro", cat:"cafe", lat:49.5942022, lng:17.2490708, rating:5.0, addr:"Riegrova 404/5", hours:"15:00–00:00", note:"Spot de verano para tomar algo con amigos."},
+
+  // PARQUES
+  {name:"Smetanovy sady", cat:"park", lat:49.5878708, lng:17.2484178, rating:4.6, addr:"Centro-oeste", hours:"24h", note:"El parque más grande, con faisanes y pabellón de flores."},
+  {name:"Bezručovy sady", cat:"park", lat:49.5922622, lng:17.2562385, rating:4.7, addr:"Junto a la muralla", hours:"24h", note:"Paseo junto al río y las murallas históricas."},
+  {name:"Čechovy sady", cat:"park", lat:49.5927891, lng:17.2448288, rating:4.6, addr:"Centro-oeste", hours:"24h", note:"El más pequeño de los tres grandes parques, zona deportiva."},
+  {name:"Park Rudolfova alej", cat:"park", lat:49.5874035, lng:17.2513582, rating:4.7, addr:"Sur del centro", hours:"24h", note:"Paseos largos y tranquilos."},
+
+  // PUNTOS DE INTERÉS
+  {name:"Reloj Astronómico de Olomouc", cat:"landmark", lat:49.5940989, lng:17.2515349, rating:4.6, addr:"Horní nám. 26 (Ayuntamiento)", hours:"Espectáculo a las 12:00", note:"Reconstruido en los años 50 con motivos socialistas, único en el mundo."},
+  {name:"Columna de la Santísima Trinidad", cat:"landmark", lat:49.5939307, lng:17.2504501, rating:4.8, addr:"Horní náměstí", hours:"24h", note:"Patrimonio UNESCO, la columna barroca más alta de Europa Central."},
+  {name:"Universidad Palacký (edificio principal)", cat:"landmark", lat:49.5954268, lng:17.2600153, rating:4.7, addr:"Křížkovského 511/8", hours:"Horario académico", note:"Sede histórica de la UPOL, fundada en 1573."},
+  {name:"Estación de tren de Olomouc", cat:"landmark", lat:49.5925769, lng:17.2778661, rating:4.0, addr:"Jeremenkova 103/23", hours:"24h", note:"Punto de llegada/salida para Praga y el resto de Chequia."},
+
+  // FACULTADES UNIVERSIDAD PALACKÝ
+  {name:"Facultad de Ciencias (Přírodovědecká fakulta)", cat:"faculty", lat:49.5924087, lng:17.2631877, rating:4.7, addr:"17. listopadu 12", hours:"L–V 6:00–21:00", note:"Edificio moderno, terraza con vistas a toda la ciudad (Bistro B6)."},
+  {name:"Facultad de Filosofía y Letras", cat:"faculty", lat:49.5950116, lng:17.2597325, rating:4.8, addr:"Křížkovského 10", hours:"Horario académico", note:"Edificio histórico junto al Rectorado."},
+  {name:"Facultad de Educación (Pedagogická fakulta)", cat:"faculty", lat:49.5957087, lng:17.2646513, rating:4.5, addr:"Žižkovo nám. 5", hours:"Horario académico", note:"Edificio histórico y moderno a la vez, cafetería propia."},
+  {name:"Facultad de Medicina (Lékařská fakulta)", cat:"faculty", lat:49.5862796, lng:17.2366108, rating:4.7, addr:"Hněvotínská 976/3", hours:"Horario académico", note:"Campus sanitario en Nová Ulice, junto al hospital universitario."},
+  {name:"Facultad de Derecho (Právnická fakulta)", cat:"faculty", lat:49.5904809, lng:17.2626714, rating:4.6, addr:"17. listopadu 8", hours:"Horario académico", note:"Edificio con plaza propia, buffet muy valorado."},
+  {name:"Facultad de Cultura Física y Deporte", cat:"faculty", lat:49.5944519, lng:17.2134809, rating:4.5, addr:"Tř. Míru 117, Neředín", hours:"Horario académico", note:"La favorita para Erasmus de deporte, instalaciones deportivas propias."},
+  {name:"Facultad de Teología Sts. Cirilo y Metodio (CMTF)", cat:"faculty", lat:49.5947113, lng:17.2546998, rating:4.8, addr:"Univerzitní nám. 22", hours:"L–V 7:00–20:00", note:"La facultad más pequeña, ambiente cercano, junto a la iglesia de San Miguel."},
+
+  // RESIDENCIAS (adicionales)
+  {name:"Kolej Bedřicha Václavka", cat:"dorm", lat:49.5932259, lng:17.2669096, rating:3.9, addr:"Šmeralova 1090/8", hours:"24h", note:"Junto al río, ambiente animado, algo de mosquitos en verano."},
+  {name:"Kolej 17. listopadu", cat:"dorm", lat:49.5945490, lng:17.2653705, rating:4.1, addr:"17. listopadu 1083/54", hours:"24h", note:"Renovada recientemente, sala con piano, comedor cerca."},
+  {name:"Residencias de Neředín", cat:"dorm", lat:49.5941562, lng:17.2149318, rating:4.6, addr:"U Letiště 786, Neředín", hours:"24h", note:"Alejadas del centro pero junto a la Facultad de Deporte; muy bien valoradas."},
+
+  // MUSEOS
+  {name:"Museo de Historia Natural de Olomouc", cat:"museum", lat:49.5962833, lng:17.2570352, rating:4.5, addr:"Náměstí Republiky 5", hours:"Ma–D 10:00–18:00 (jue hasta 20:00)", note:"Geología, biología y curiosidades locales, ideal para una tarde tranquila."},
+  {name:"Museo de Arte de Olomouc", cat:"museum", lat:49.5960398, lng:17.2562577, rating:4.6, addr:"Denisova 47", hours:"Mi–D 10:00–18:00", note:"Arte checo y eslovaco, vistas panorámicas desde la torre. Entrada gratis los domingos."},
+  {name:"Museo Arquidiocesano", cat:"museum", lat:49.5983094, lng:17.2616073, rating:4.7, addr:"Václavské nám. 4", hours:"Mi–D 10:00–18:00", note:"El más importante de la ciudad: frescos románicos, carruajes y arte barroco."},
+  {name:"Veteran Arena (museo del automóvil)", cat:"museum", lat:49.6040496, lng:17.2768534, rating:4.8, addr:"Sladovní 103", hours:"Ma–D 10:00–17:00 (cerrado lun)", note:"Colección de coches y motos checoslovacos de antes de 1940, sorprendente."},
+  {name:"Pevnost poznání (museo de ciencia)", cat:"museum", lat:49.5928962, lng:17.257982, rating:4.7, addr:"17. listopadu 7", hours:"L–V 9:00–17:00, S–D 10:00–18:00", note:"Antigua fortificación reconvertida en museo interactivo, con planetario."},
+  {name:"Haunted House Olomouc", cat:"museum", lat:49.5970178, lng:17.2631878, rating:4.8, addr:"Komenského 4", hours:"Mi–D, según horario (cerrado lun/mar)", note:"Casa del terror con actores, muy recomendada para un plan diferente."},
+
+  // IGLESIAS Y MONUMENTOS RELIGIOSOS
+  {name:"Catedral de San Wenceslao", cat:"church", lat:49.5977901, lng:17.2626379, rating:4.8, addr:"Václavské náměstí", hours:"L–D 6:30–17:30 aprox.", note:"Catedral gótica, la más imponente de la ciudad."},
+  {name:"Basílica de Svatý Kopeček", cat:"church", lat:49.6291730, lng:17.338086, rating:4.7, addr:"Nám. Sadové 1, Svatý Kopeček", hours:"L 8:30–12:00, resto 8:30–17:00", note:"Basílica barroca en la colina, vistas de 200° sobre Olomouc. Bus nº11."},
+  {name:"Iglesia de San Miguel", cat:"church", lat:49.5938981, lng:17.2541005, rating:4.8, addr:"Na Hradě", hours:"L–D 10:00–19:00", note:"Posiblemente la iglesia más bonita de la ciudad, sube a la torre."},
+  {name:"Iglesia de San Mauricio", cat:"church", lat:49.5951618, lng:17.2512985, rating:4.8, addr:"8. května 15", hours:"L–D 7:00–17:00", note:"Sube los ~200 escalones de la torre-campanario para las mejores vistas de Olomouc."},
+  {name:"Iglesia Roja (Červený kostel)", cat:"church", lat:49.5934797, lng:17.2472531, rating:4.7, addr:"Bezručova 3", hours:"L–V 8:30–19:00, S 10:00–17:00", note:"Antigua iglesia evangélica reconvertida en espacio cultural con cafetería."},
+  {name:"Iglesia de San Gorazd (ortodoxa)", cat:"church", lat:49.5976900, lng:17.268886, rating:4.6, addr:"Gorazdovo nám. 14", hours:"Mi/Vi/Sá 17:30–19:00, Dom 8:30–12:00", note:"La única iglesia ortodoxa de la ciudad, colorida y singular."},
+
+  // MIRADORES Y MONTAÑA
+  {name:"Mirador de Svatý Kopeček", cat:"viewpoint", lat:49.6288970, lng:17.3374461, rating:4.9, addr:"Nám. Sadové 2, Svatý Kopeček", hours:"24h", note:"El mejor atardecer cerca de Olomouc, justo al lado de la basílica."},
+  {name:"Torre panorámica del ZOO Olomouc", cat:"viewpoint", lat:49.6341237, lng:17.3403902, rating:4.6, addr:"Svatý Kopeček (dentro del ZOO)", hours:"L–V 8:00–20:00 (fines de semana variable)", note:"Entrada libre a la torre, vistas de toda la región de Haná."},
+  {name:"Praděd (pico más alto de Moravia)", cat:"viewpoint", lat:50.0830693, lng:17.2309642, rating:4.7, addr:"Jeseníky, Malá Morávka (~1h20 en coche)", hours:"24h (restaurante cima con horario propio)", note:"El gran clásico de senderismo de la región — 1.491 m, rutas desde Karlova Studánka o Skřítek."},
+
+  // EXCURSIONES CERCANAS (medio día / día completo)
+  {name:"Castillo de Bouzov", cat:"daytrip", lat:49.7049411, lng:16.8895083, rating:4.8, addr:"Bouzov 8 (~40 min en coche)", hours:"L–D 9:00–16:00", note:"El castillo de cuento más famoso de Moravia, visitas guiadas también en inglés."},
+  {name:"Cuevas de Javoříčko", cat:"daytrip", lat:49.6703174, lng:16.9139189, rating:4.8, addr:"Javoříčko (~35 min en coche)", hours:"Ma–D 9:00–16:00 (cerrado lun)", note:"Combínalas con Bouzov en la misma escapada — 7°C constantes todo el año."},
+  {name:"Palacio Arzobispal de Kroměříž (UNESCO)", cat:"daytrip", lat:49.3004779, lng:17.3935276, rating:4.7, addr:"Kroměříž (~1h en coche/tren)", hours:"Ma–D 8:30–18:00 (cerrado lun)", note:"Patrimonio UNESCO junto con su jardín de las flores; tour Via Magnifica muy recomendado."},
+  {name:"Jardín de las Flores de Kroměříž (UNESCO)", cat:"daytrip", lat:49.2973674, lng:17.3832145, rating:4.5, addr:"Gen. Svobody 1192/39, Kroměříž", hours:"L–D 9:00–18:00", note:"Jardín barroco geométrico, mejor época mayo–septiembre."},
+  {name:"Museo del queso Olomoucké tvarůžky (Loštice)", cat:"daytrip", lat:49.7456076, lng:16.9278082, rating:4.8, addr:"Palackého 56, Loštice (~45 min en coche)", hours:"L–D 9:00–18:00", note:"El queso típico de la región de Olomouc, con tienda al final de la visita."},
+
+  // FREE TOURS Y TURISMO
+  {name:"Centro de Información Turística de Olomouc", cat:"freetour", lat:49.5940537, lng:17.2514875, rating:4.5, addr:"Horní nám. 583/1 (junto al Ayuntamiento)", hours:"L–S 9:00–19:00, D 9:00–17:00", note:"Punto de salida de tours guiados por el centro histórico, venden la Olomouc Region Card."},
+  {name:"Olomouc Active — excursiones de un día", cat:"freetour", lat:49.6035623, lng:17.2583334, rating:null, addr:"Na Letné 479/49, Lazce", hours:"L–S 8:00–16:00 (cerrado dom)", note:"Agencia local que organiza salidas a Bouzov, Jeseníky y otros destinos cercanos desde Olomouc."}
+];
+
+// ---------- MAP INIT (Leaflet) ----------
+const map = L.map('map', {
+  center: [49.5940, 17.2520],
+  zoom: 15,
+  zoomControl: false
+});
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19,
+  attribution: '&copy; OpenStreetMap contributors'
+}).addTo(map);
+
+L.control.zoom({position:'topleft'}).addTo(map);
+
+// ---------- FILTER CHIPS (destacar, no ocultar) ----------
+const filtersEl = document.getElementById('filters');
+const highlightCats = new Set(); // vacío = todo en estado normal
+
+Object.entries(CATS).forEach(([key, c]) => {
+  const chip = document.createElement('div');
+  chip.className = 'chip';
+  chip.dataset.cat = key;
+  chip.innerHTML = `<span class="dot" style="background:${c.color}"></span>${c.icon} ${c.label}`;
+  chip.addEventListener('click', () => {
+    if (highlightCats.has(key)) { highlightCats.delete(key); chip.classList.remove('active'); }
+    else { highlightCats.add(key); chip.classList.add('active'); }
+    render();
+  });
+  filtersEl.appendChild(chip);
+});
+
+function ratingText(r){ return (r === null || r === undefined) ? 'N/D' : r.toFixed(1); }
+
+// ---------- MARKERS ----------
+const markerRefs = {}; // name -> {marker}
+
+PLACES.forEach((p) => {
+  const cat = CATS[p.cat];
+  const icon = L.divIcon({
+    className: '',
+    html: `<div class="pin" data-cat="${p.cat}" style="background:${cat.color};color:${cat.color}"><span>${cat.icon}</span></div>`,
+    iconSize: [26, 26],
+    iconAnchor: [13, 26],
+    popupAnchor: [0, -24]
+  });
+
+  const dirUrl = `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}`;
+  const popupHtml = `
+    <div class="pop-cat" style="color:${cat.color}">${cat.label}</div>
+    <p class="pop-name">${p.name}</p>
+    <div class="pop-addr">${p.addr}</div>
+    <div class="pop-row">⭐ ${ratingText(p.rating)} &nbsp;·&nbsp; 🕒 ${p.hours}</div>
+    <div class="pop-row" style="margin-top:6px;color:var(--slate)">${p.note}</div>
+    <a class="pop-btn" href="${dirUrl}" target="_blank" rel="noopener">Cómo llegar →</a>
+  `;
+
+  const marker = L.marker([p.lat, p.lng], {icon}).addTo(map);
+  marker.bindPopup(popupHtml, {maxWidth:260});
+
+  markerRefs[p.name] = {marker};
+});
+
+// ---------- LIST + SEARCH ----------
+const listEl = document.getElementById('placeList');
+const countLabel = document.getElementById('countLabel');
+const searchBox = document.getElementById('searchBox');
+let selectedName = null;
+
+function render(){
+  const q = searchBox.value.trim().toLowerCase();
+  listEl.innerHTML = '';
+  let shown = 0;
+  const anyHighlight = highlightCats.size > 0;
+
+  PLACES.forEach(p => {
+    const inSearch = !q || p.name.toLowerCase().includes(q) || p.addr.toLowerCase().includes(q);
+    const el = markerRefs[p.name].marker.getElement();
+
+    if (el) {
+      el.style.display = inSearch ? '' : 'none';
+      const pinDiv = el.querySelector('.pin');
+      if (pinDiv) {
+        pinDiv.classList.remove('pin-highlight', 'pin-dim');
+        if (anyHighlight) {
+          pinDiv.classList.add(highlightCats.has(p.cat) ? 'pin-highlight' : 'pin-dim');
+        }
+      }
+    }
+    if (!inSearch) return;
+    shown++;
+
+    const card = document.createElement('div');
+    let cardClass = 'place-card';
+    if (p.name === selectedName) cardClass += ' selected';
+    if (anyHighlight) cardClass += highlightCats.has(p.cat) ? ' cat-highlight' : ' cat-dim';
+    card.className = cardClass;
+    card.innerHTML = `
+      <div class="catbar" style="background:${CATS[p.cat].color}"></div>
+      <div class="pc-body">
+        <div class="pc-name">${CATS[p.cat].icon} ${p.name}</div>
+        <div class="pc-meta"><span class="pc-rating">★ ${ratingText(p.rating)}</span><span>${CATS[p.cat].label}</span></div>
+      </div>
+    `;
+    card.addEventListener('click', () => {
+      selectedName = p.name;
+      map.flyTo([p.lat, p.lng], 17, {duration:0.9});
+      markerRefs[p.name].marker.openPopup();
+      render();
+      if (window.innerWidth <= 820) document.getElementById('sidebar').classList.remove('open');
+    });
+    listEl.appendChild(card);
+  });
+
+  countLabel.textContent = shown;
+}
+searchBox.addEventListener('input', render);
+render();
+
+// ---------- CONTROLS ----------
+document.getElementById('btnReset').addEventListener('click', () => {
+  map.flyTo([49.5940, 17.2520], 15, {duration:0.8});
+});
+document.getElementById('sidebarToggle').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('open');
+});
+document.getElementById('closeWelcome').addEventListener('click', (e) => {
+  e.target.closest('#welcomeCard').style.display = 'none';
+});
+</script>
+</body>
+</html>
