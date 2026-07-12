@@ -70,11 +70,6 @@
     font-size:11.5px;color:var(--sandstone-dim);letter-spacing:1.5px;text-transform:uppercase;
     pointer-events:auto;opacity:0.85;
   }
-  #sidebarToggle{
-    pointer-events:auto;background:var(--ink-soft);border:1px solid rgba(184,147,91,0.4);
-    color:var(--sandstone);width:38px;height:38px;border-radius:8px;cursor:pointer;
-    display:none;align-items:center;justify-content:center;font-size:16px;
-  }
 
   /* ---------- SIDEBAR ---------- */
   #sidebar{
@@ -191,10 +186,62 @@
   #welcomeCard b{color:var(--gold);}
   #welcomeCard .close{float:right;cursor:pointer;color:var(--sandstone-dim);opacity:0.6;}
 
+  #sheetHandle{display:none;}
+
   @media (max-width:820px){
-    #sidebar{position:absolute;left:0;top:0;z-index:25;margin-left:-340px;}
-    #sidebar.open{margin-left:0;}
-    #sidebarToggle{display:flex;}
+    html,body{overflow:hidden;}
+    #app{flex-direction:column;}
+
+    #header{padding:12px 16px;}
+    #header h1{font-size:18px;}
+    #header .sub{font-size:10px;letter-spacing:1px;}
+    #header .clockmark{width:22px;height:22px;}
+
+    #sidebar{
+      position:fixed;left:0;right:0;bottom:0;top:auto;z-index:30;
+      width:100%;min-width:0;height:auto;
+      max-height:150px;
+      border-radius:20px 20px 0 0;
+      box-shadow:0 -8px 28px rgba(0,0,0,0.45);
+      margin-left:0;
+      transition:max-height 0.32s cubic-bezier(.2,.8,.3,1);
+      overflow:hidden;
+    }
+    #sidebar.expanded{max-height:84vh;}
+
+    #sidebar .sb-inner{padding-top:0;overflow:hidden;}
+
+    #sheetHandle{
+      display:flex;flex-direction:column;align-items:center;gap:6px;
+      padding:10px 16px 6px;cursor:pointer;flex-shrink:0;
+    }
+    #sheetHandle .bar{width:38px;height:4px;border-radius:3px;background:#d9cfba;}
+    #sheetHandle .summary{
+      font-size:12.5px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:6px;
+    }
+    #sheetHandle .summary .arrow{font-size:10px;color:var(--slate);transition:transform 0.3s ease;}
+    #sidebar.expanded #sheetHandle .arrow{transform:rotate(180deg);}
+
+    #searchWrap{padding:2px 16px 10px;flex-shrink:0;}
+    #searchBox{padding:12px 14px;font-size:15px;}
+
+    #filters{
+      padding:0 16px 12px;flex-wrap:nowrap;overflow-x:auto;border-bottom:none;
+      -webkit-overflow-scrolling:touch;flex-shrink:0;
+    }
+    #filters::-webkit-scrollbar{display:none;}
+    .chip{flex-shrink:0;padding:8px 12px;font-size:12.5px;}
+
+    #listMeta{display:none;}
+    #placeList{padding:0 12px calc(16px + env(safe-area-inset-bottom));}
+    .place-card{padding:12px 10px;}
+
+    #legend-note{display:none;}
+
+    #mapControls{bottom:166px;right:12px;}
+    .ctrl-btn{padding:10px 14px;font-size:12.5px;}
+
+    .leaflet-top.leaflet-left{top:66px;}
     #welcomeCard{display:none;}
   }
 </style>
@@ -204,6 +251,10 @@
 
   <div id="sidebar">
     <div class="sb-inner">
+      <div id="sheetHandle">
+        <div class="bar"></div>
+        <div class="summary"><span id="sheetSummaryText">Cargando…</span><span class="arrow">▲</span></div>
+      </div>
       <div id="searchWrap"><input id="searchBox" type="text" placeholder="Buscar un sitio…"></div>
       <div id="filters"></div>
       <div id="listMeta"><span id="countLabel">0</span> sitios</div>
@@ -231,7 +282,6 @@
         <div class="sub">Guía interactiva · Erasmus 2026/27</div>
       </div>
     </div>
-    <button id="sidebarToggle">☰</button>
   </div>
 
 </div>
@@ -478,25 +528,50 @@ function render(){
       map.flyTo([p.lat, p.lng], 17, {duration:0.9});
       markerRefs[p.name].marker.openPopup();
       render();
-      if (window.innerWidth <= 820) document.getElementById('sidebar').classList.remove('open');
+      if (window.innerWidth <= 820) document.getElementById('sidebar').classList.remove('expanded');
     });
     listEl.appendChild(card);
   });
 
   countLabel.textContent = shown;
+  const summaryEl = document.getElementById('sheetSummaryText');
+  if (summaryEl) {
+    summaryEl.textContent = anyHighlight
+      ? `${shown} sitios · ${highlightCats.size} categoría(s) destacada(s)`
+      : `${shown} sitios en Olomouc · toca para ver la lista`;
+  }
 }
 searchBox.addEventListener('input', render);
+searchBox.addEventListener('focus', () => {
+  if (window.innerWidth <= 820) document.getElementById('sidebar').classList.add('expanded');
+});
 render();
 
 // ---------- CONTROLS ----------
 document.getElementById('btnReset').addEventListener('click', () => {
   map.flyTo([49.5940, 17.2520], 15, {duration:0.8});
 });
-document.getElementById('sidebarToggle').addEventListener('click', () => {
-  document.getElementById('sidebar').classList.toggle('open');
-});
 document.getElementById('closeWelcome').addEventListener('click', (e) => {
   e.target.closest('#welcomeCard').style.display = 'none';
+});
+
+// ---------- BOTTOM SHEET (móvil) ----------
+const sidebarEl = document.getElementById('sidebar');
+const sheetHandle = document.getElementById('sheetHandle');
+
+sheetHandle.addEventListener('click', () => {
+  sidebarEl.classList.toggle('expanded');
+});
+
+// arrastrar el handle para abrir/cerrar
+let dragStartY = null;
+sheetHandle.addEventListener('touchstart', (e) => { dragStartY = e.touches[0].clientY; }, {passive:true});
+sheetHandle.addEventListener('touchend', (e) => {
+  if (dragStartY === null) return;
+  const deltaY = e.changedTouches[0].clientY - dragStartY;
+  if (deltaY < -25) sidebarEl.classList.add('expanded');
+  else if (deltaY > 25) sidebarEl.classList.remove('expanded');
+  dragStartY = null;
 });
 </script>
 </body>
