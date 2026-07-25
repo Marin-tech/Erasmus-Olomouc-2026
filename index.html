@@ -4,50 +4,73 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Olomouc · Guía Erasmus</title>
+<link rel="preconnect" href="https://tile.openstreetmap.org">
+<link rel="preconnect" href="https://a.tile.openstreetmap.org">
+<link rel="preconnect" href="https://b.tile.openstreetmap.org">
+<link rel="preconnect" href="https://c.tile.openstreetmap.org">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.15.0/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.15.0/firebase-firestore-compat.min.js"></script>
 <style>
   :root{
-    --bg:#F6F5F2;
-    --ink:#171A1F;
-    --ink-soft:#3A3F47;
-    --line:#E4E1D9;
-    --accent:#2F5DE0;
-    --accent-soft:#EAF0FF;
-    --gold:#C9A227;
+    --bg:#F5F5F7;
+    --ink:#1D1D1F;
+    --ink-soft:#6E6E73;
+    --line:#D9D9DE;
+    --accent:#0A84FF;
+    --accent-soft:#E9F3FF;
+    --gold:#1D1D1F;
+    --star:#FF9500;
     --paper:#FFFFFF;
-    --slate:#6B7280;
+    --slate:#86868B;
 
-    --c-bar:#8B2E3F;
-    --c-club:#B0246B;
-    --c-gym:#1F7A5C;
-    --c-dorm:#2C4A7C;
-    --c-faculty:#4A4E9E;
-    --c-market:#4C7A2C;
-    --c-restaurant:#B5651D;
-    --c-cafe:#6B4226;
-    --c-park:#2F7D46;
-    --c-landmark:#C9A227;
-    --c-museum:#8E44AD;
-    --c-church:#8C6239;
-    --c-viewpoint:#1F8A9E;
-    --c-daytrip:#C1553A;
-    --c-secret:#6B2D5C;
-    --c-activity:#1F6FA3;
-    --c-ski:#2F9AC2;
-    --c-freetour:#B8791F;
+    --c-bar:#8B3A46;
+    --c-club:#9C3868;
+    --c-gym:#2E7D5B;
+    --c-dorm:#3E5A8C;
+    --c-faculty:#54579C;
+    --c-market:#57795B;
+    --c-restaurant:#B06A2E;
+    --c-cafe:#6F4E3A;
+    --c-park:#3E8055;
+    --c-landmark:#B08A2E;
+    --c-museum:#8449A0;
+    --c-church:#8C6B45;
+    --c-viewpoint:#357F94;
+    --c-daytrip:#B25B44;
+    --c-secret:#6B3560;
+    --c-activity:#33689E;
+    --c-ski:#3591AF;
+    --c-freetour:#A87A33;
+    --c-town:#5B6B7A;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--ink);color:var(--paper);overflow:hidden;}
 
   #app{position:relative;width:100vw;height:100vh;height:100dvh;display:flex;}
 
+  /* ---------- LOADING OVERLAY ---------- */
+  #loadingOverlay{
+    position:absolute;inset:0;z-index:600;background:var(--ink);
+    display:flex;align-items:center;justify-content:center;
+    transition:opacity 0.35s ease;
+  }
+  .loading-box{display:flex;flex-direction:column;align-items:center;gap:14px;}
+  .spinner{
+    width:30px;height:30px;border-radius:50%;
+    border:3px solid rgba(255,255,255,0.2);border-top-color:#fff;
+    animation:spin 0.8s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  #loadingText{color:#fff;font-size:13px;font-weight:500;letter-spacing:0.2px;}
+
   /* ---------- HEADER ---------- */
   #header{
     position:absolute;top:0;left:0;right:0;z-index:200;
     display:flex;align-items:center;justify-content:space-between;gap:10px;
     padding:12px 16px;
-    background:linear-gradient(180deg, rgba(23,26,31,0.94) 20%, rgba(23,26,31,0));
+    background:linear-gradient(180deg, rgba(29,29,31,0.94) 20%, rgba(29,29,31,0));
     pointer-events:none;
   }
   #header .left{display:flex;flex-direction:column;pointer-events:auto;min-width:0;}
@@ -66,12 +89,12 @@
     display:flex;justify-content:center;
   }
   #progressPill{
-    pointer-events:auto;background:rgba(23,26,31,0.85);border:1px solid rgba(255,255,255,0.14);
+    pointer-events:auto;background:rgba(29,29,31,0.85);border:1px solid rgba(255,255,255,0.14);
     border-radius:999px;padding:6px 14px;font-size:11.5px;color:#fff;
     display:flex;align-items:center;gap:8px;
   }
   #progressPill .bar{width:70px;height:5px;border-radius:3px;background:rgba(255,255,255,0.18);overflow:hidden;}
-  #progressPill .bar-fill{height:100%;background:var(--gold);border-radius:3px;transition:width 0.4s ease;}
+  #progressPill .bar-fill{height:100%;background:var(--accent);border-radius:3px;transition:width 0.4s ease;}
 
   /* ---------- SIDEBAR / SHEET ---------- */
   #sidebar{
@@ -93,13 +116,13 @@
 
   #filters{padding:0 16px 12px;display:flex;flex-wrap:wrap;gap:6px;border-bottom:1px solid var(--line);}
   .chip{
-    display:flex;align-items:center;gap:5px;padding:6px 10px;border-radius:8px;
+    display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:20px;
     font-size:11.5px;font-weight:600;cursor:pointer;user-select:none;
-    border:1px solid var(--line);background:var(--paper);color:var(--ink-soft);
+    border:none;background:var(--bg);color:var(--ink-soft);
   }
   .chip .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
-  .chip.active{background:var(--ink);color:#fff;border-color:var(--ink);}
-  .chip .done{font-size:9px;color:var(--gold);}
+  .chip.active{background:var(--ink);color:#fff;}
+  .chip .done{font-size:9px;color:var(--accent);}
 
   #listMeta{padding:12px 16px 6px;font-size:11px;letter-spacing:0.5px;text-transform:uppercase;color:var(--slate);font-weight:600;}
 
@@ -113,14 +136,14 @@
   }
   .place-card:hover{background:var(--bg);}
   .place-card.selected{background:var(--accent-soft);border-color:var(--accent);}
-  .place-card.cat-highlight{border-color:var(--gold);background:#FBF6E6;}
+  .place-card.cat-highlight{border-color:var(--ink);background:var(--bg);}
   .place-card.cat-dim{opacity:0.4;}
   .place-card.visited{opacity:0.55;}
   .place-card .catbar{width:4px;border-radius:3px;flex-shrink:0;}
   .place-card .pc-body{flex:1;min-width:0;}
   .place-card .pc-name{font-weight:700;font-size:13px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .place-card .pc-meta{font-size:11px;color:var(--slate);margin-top:2px;display:flex;gap:8px;align-items:center;}
-  .pc-rating{color:var(--gold);font-weight:700;}
+  .pc-rating{color:var(--star);font-weight:700;}
   .pc-check{
     width:24px;height:24px;border-radius:50%;border:1.5px solid var(--line);flex-shrink:0;
     display:flex;align-items:center;justify-content:center;font-size:12px;color:transparent;cursor:pointer;
@@ -142,7 +165,7 @@
   .pin:hover{transform:rotate(-45deg) scale(1.15);}
   .pin.pin-visited::after{
     content:'✓';position:absolute;top:-6px;right:-6px;width:14px;height:14px;border-radius:50%;
-    background:var(--gold);color:#171A1F;font-size:9px;font-weight:900;
+    background:var(--accent);color:#fff;font-size:9px;font-weight:900;
     display:flex;align-items:center;justify-content:center;transform:rotate(45deg);
     border:1.5px solid #fff;
   }
@@ -173,26 +196,26 @@
   }
   .pop-btn:hover{background:var(--accent);}
   .pop-btn.check{background:var(--paper);color:var(--ink);border:1.5px solid var(--line);}
-  .pop-btn.check.on{background:var(--gold);border-color:var(--gold);color:#171A1F;}
+  .pop-btn.check.on{background:var(--accent);border-color:var(--accent);color:#fff;}
 
   #mapControls{position:absolute;bottom:22px;right:16px;z-index:20;display:flex;flex-direction:column;gap:8px;}
   .ctrl-btn{
-    background:rgba(23,26,31,0.85);color:#fff;border:1px solid rgba(255,255,255,0.16);
+    background:rgba(29,29,31,0.85);color:#fff;border:1px solid rgba(255,255,255,0.16);
     padding:8px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:600;
   }
   .ctrl-btn:hover{background:var(--accent);}
 
   #welcomeCard{
     position:absolute;bottom:20px;left:20px;z-index:20;max-width:270px;
-    background:rgba(23,26,31,0.9);border:1px solid rgba(255,255,255,0.14);
+    background:rgba(29,29,31,0.9);border:1px solid rgba(255,255,255,0.14);
     border-radius:12px;padding:14px 16px;font-size:12px;color:#D6D9DE;line-height:1.5;
   }
-  #welcomeCard b{color:var(--gold);}
+  #welcomeCard b{color:var(--accent);}
   #welcomeCard .close{float:right;cursor:pointer;color:#D6D9DE;opacity:0.6;}
 
   /* ---------- MODAL (transporte) ---------- */
   #modalOverlay{
-    display:none;position:fixed;inset:0;background:rgba(10,12,15,0.6);z-index:500;
+    display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:500;
     align-items:center;justify-content:center;padding:20px;
   }
   #modalOverlay.open{display:flex;}
@@ -250,6 +273,13 @@
 </head>
 <body>
 <div id="app">
+
+  <div id="loadingOverlay">
+    <div class="loading-box">
+      <div class="spinner"></div>
+      <div id="loadingText">Cargando mapa…</div>
+    </div>
+  </div>
 
   <div id="sidebar">
     <div class="sb-inner">
@@ -319,7 +349,8 @@ const CATS = {
   activity:    {label:"Actividades",       icon:"🎯", color:"var(--c-activity)",   points:15},
   ski:         {label:"Nieve y esquí",     icon:"🎿", color:"var(--c-ski)",        points:30},
   daytrip:     {label:"Excursiones",       icon:"🚗", color:"var(--c-daytrip)",    points:30},
-  freetour:    {label:"Free tours",        icon:"🧭", color:"var(--c-freetour)",   points:10}
+  freetour:    {label:"Free tours",        icon:"🧭", color:"var(--c-freetour)",   points:10},
+  town:        {label:"Pueblos cercanos",  icon:"🏘️", color:"var(--c-town)",       points:20}
 };
 
 const PLACES = [
@@ -460,8 +491,75 @@ const PLACES = [
   {name:"Červenohorské sedlo Ski Center", cat:"ski", lat:50.0864, lng:17.2258, rating:null, addr:"Červenohorské sedlo (~1h10 en coche)", hours:"Mediados dic–finales mar", note:"1.164 m de altitud, uno de los centros más conocidos del país."},
   {name:"Ramzová – Šerák/Bonera", cat:"ski", lat:50.1934, lng:17.1508, rating:null, addr:"Ramzová (~1h20 en coche)", hours:"Dic–mar, según nieve", note:"La mayor área esquiable de Moravia, hasta 1.325 m."},
   {name:"Dolní Morava (Kralický Sněžník)", cat:"ski", lat:50.1275, lng:16.8378, rating:null, addr:"Dolní Morava (~1h30 en coche)", hours:"Dic–mar, según nieve", note:"El resort más moderno; en verano tiene el puente colgante Sky Bridge 721."},
-  {name:"Praděd – Ovčárna (Ski Karlov)", cat:"ski", lat:49.9977, lng:17.2280, rating:null, addr:"Ovčárna, bajo el Praděd (~1h20 en coche)", hours:"Finales oct–principios may", note:"El resort más alto de la República Checa; temporada larguísima."}
+  {name:"Praděd – Ovčárna (Ski Karlov)", cat:"ski", lat:49.9977, lng:17.2280, rating:null, addr:"Ovčárna, bajo el Praděd (~1h20 en coche)", hours:"Finales oct–principios may", note:"El resort más alto de la República Checa; temporada larguísima."},
+
+  // FUENTES BARROCAS
+  {name:"Fuente de Hércules", cat:"landmark", lat:49.5942, lng:17.2510, rating:4.7, addr:"Horní náměstí", hours:"24h", note:"De 1687, justo delante del Ayuntamiento — parte del conjunto único de fuentes barrocas de la ciudad."},
+  {name:"Fuente de Arión", cat:"landmark", lat:49.5934, lng:17.2511, rating:4.7, addr:"Horní náměstí", hours:"24h", note:"Obra de Ivan Theimer, con la gran tortuga como punto de encuentro habitual."},
+  {name:"Fuente de Neptuno", cat:"landmark", lat:49.5925, lng:17.2524, rating:4.6, addr:"Dolní náměstí", hours:"24h", note:"La otra gran plaza de Olomouc, preciosa iluminada de noche."},
+
+  // ACTIVIDADES AL AIRE LIBRE
+  {name:"Cyklotrasa podél Moravy", cat:"activity", lat:49.5730, lng:17.2617, rating:4.8, addr:"Ribera del río Morava", hours:"24h", note:"Carril bici llano junto al río, ideal para una tarde en bici o corriendo."},
+  {name:"Vodácký svět (alquiler de kayak/paddleboard)", cat:"activity", lat:49.5649, lng:17.2367, rating:4.6, addr:"Kyselovská 80/57", hours:"L,Ma,Ju,V 9:00–12:00, 14:00–18:00", note:"Alquilan kayaks y paddleboards para bajar el Morava; también enseñan la vuelta de esquimal."},
+  {name:"Pivovar TVARG (Velká Bystřice)", cat:"activity", lat:49.5946, lng:17.3581, rating:4.5, addr:"Velká Bystřice (~15 min en coche)", hours:"11:00–20:00/21:00/23:00", note:"Cervecería + fábrica de tvarůžky (el queso típico de la región); hacen visitas guiadas con cata."},
+
+  // PUEBLOS CERCANOS (solo lo esencial)
+  {name:"Castillo de Šternberk", cat:"town", lat:49.733056, lng:17.301858, rating:4.6, addr:"Šternberk (~25 min en coche/tren)", hours:"9:00–16:00 (cerrado lun)", note:"Castillo gótico-barroco con visitas guiadas; combínalo con el museo del tiempo."},
+  {name:"Expozice času (museo de relojes antiguos)", cat:"town", lat:49.729709, lng:17.2973695, rating:4.6, addr:"ČSA 113/19, Šternberk", hours:"9:00–17:00", note:"Šternberk es célebre por su industria relojera — museo curioso y poco turístico."},
+  {name:"Torre del Ayuntamiento de Litovel", cat:"town", lat:49.7016015, lng:17.0750529, rating:4.7, addr:"Nám. Přemysla Otakara, Litovel (~30 min en coche)", hours:"10:00–16:00", note:"Litovel es la 'pequeña Venecia de Haná', cruzada por brazos del río Morava — sube a la torre para verlo desde arriba."},
+  {name:"Castillo de Přerov / Museo Komenský", cat:"town", lat:49.4552271, lng:17.4509959, rating:4.5, addr:"Horní nám. 1/1, Přerov (~35 min en coche/tren)", hours:"8:00–17:00 (cerrado lun)", note:"Castillo renacentista sobre el río Bečva, con museo y torre-mirador."},
+  {name:"Casa Habana – Kubánský Bar (Prostějov)", cat:"bar", lat:49.4724366, lng:17.1169643, rating:4.5, addr:"Újezd 1652/4A, Prostějov (~30 min en coche)", hours:"Ma–Ju 19:00–00:00/1:00, Vi–Sá 19:00–4:00", note:"El bar con más ambiente de Prostějov, música latina en directo los fines de semana."},
+
+  // MÁS NATURALEZA Y EXCURSIONES AL AIRE LIBRE
+  {name:"Jardín Botánico – Rosaleda", cat:"activity", lat:49.5922031, lng:17.2613187, rating:4.7, addr:"17. listopadu, junto a Bezručovy sady", hours:"9:00–18:00", note:"Un oasis floral dentro de la propia ciudad — espectacular en junio con las rosas en flor."},
+  {name:"Recinto ferial Flora Olomouc", cat:"activity", lat:49.5882225, lng:17.2456322, rating:4.4, addr:"Wolkerova 37/17", hours:"Según exposición", note:"Parque + pabellones de exposiciones (flores, coches clásicos, gatos...); consulta el calendario de ferias."},
+  {name:"Lago Chomoutov", cat:"activity", lat:49.6541638, lng:17.2399239, rating:4.6, addr:"Chomoutov (~15 min en bici desde el centro)", hours:"24h", note:"Lago tranquilo rodeado de naturaleza, ideal para una tarde de picnic o paseo en bici."},
+  {name:"Casa de la Naturaleza – Litovelské Pomoraví", cat:"activity", lat:49.641438, lng:17.1998823, rating:4.6, addr:"Skrbeňská 669, Horka nad Moravou (~20 min en coche/bici)", hours:"9:00–17:00/18:00", note:"Puerta de entrada a la reserva natural más importante junto a Olomouc: bosques de ribera, ciclismo y rafting suave por el Morava."},
+  {name:"Cuevas de Mladeč", cat:"daytrip", lat:49.7065924, lng:17.0158358, rating:4.6, addr:"Mladeč 84 (~35 min en coche)", hours:"Ma–D 9:00–16:30", note:"Combínalas con las de Javoříčko en la misma ruta — más cortas pero con hallazgos prehistóricos importantes."},
+  {name:"Velký Kosíř (mirador y senderismo)", cat:"viewpoint", lat:49.5483398, lng:17.0617409, rating:4.6, addr:"Slatinky-Slatinice (~25 min en coche)", hours:"24h (torre con horario propio)", note:"El 'monte' más alto de la llanura de Haná — subida fácil en familia, con torre-mirador y zona de barbacoa."}
 ];
+
+// ---------- LÍNEAS DE TRANSPORTE (coordenadas reales de paradas, simplificadas) ----------
+// Nota: son trazados aproximados construidos uniendo las paradas geolocalizadas de cada línea,
+// no la traza oficial exacta de los raíles — suficiente para saber por dónde pasa cada línea.
+const TRANSIT_LINES = {
+  t1: { label:"Tranvía 1 (Hlavní nádraží ↔ Nová Ulice)", color:"#D62839", coords:[
+    [49.5923,17.2777],[49.5896,17.2629],[49.5891,17.2543],[49.5917,17.2500],[49.5893,17.2452],[49.5813,17.2402],[49.5778,17.2302]
+  ]},
+  t2: { label:"Tranvía 2 (Neředín ↔ Hlavní nádraží)", color:"#1D8A99", coords:[
+    [49.5953,17.2174],[49.5965,17.2316],[49.5963,17.2381],[49.5959,17.2457],[49.5956,17.2521],[49.5962,17.2572],[49.5969,17.2609],[49.5962,17.2650],[49.5923,17.2777]
+  ]},
+  t3: { label:"Tranvía 3 (Náměstí Hrdinů ↔ U Kapličky)", color:"#8E5FD1", coords:[
+    [49.5948,17.2472],[49.5917,17.2500],[49.5891,17.2543],[49.5879,17.2578],[49.5749,17.2479]
+  ]},
+  t4: { label:"Tranvía 4 (Nová Ulice ↔ Autobusové nádraží)", color:"#2E9E4F", coords:[
+    [49.5778,17.2302],[49.5813,17.2402],[49.5893,17.2452],[49.5917,17.2500],[49.5948,17.2472],[49.5956,17.2521],[49.5962,17.2572],[49.5969,17.2609],[49.5962,17.2650],[49.5923,17.2777],[49.5881,17.2857]
+  ]},
+  t5: { label:"Tranvía 5 (U Kapličky ↔ Hlavní nádraží)", color:"#D68A1F", coords:[
+    [49.5749,17.2479],[49.5879,17.2578],[49.5896,17.2629],[49.5923,17.2777]
+  ]},
+  t7: { label:"Tranvía 7 (Neředín ↔ Hlavní nádraží, por el centro)", color:"#3F5FA8", coords:[
+    [49.5953,17.2174],[49.5965,17.2316],[49.5963,17.2381],[49.5959,17.2457],[49.5948,17.2472],[49.5917,17.2500],[49.5891,17.2543],[49.5896,17.2629],[49.5923,17.2777]
+  ]},
+  bus11: { label:"Bus 11 (centro → Svatý Kopeček / ZOO)", color:"#B8791F", dashed:true, coords:[
+    [49.5923,17.2777],[49.6035,17.2583],[49.6180,17.2900],[49.6291,17.3374],[49.6334,17.3434]
+  ]}
+};
+let transitLayer = null;
+function showTransitLine(key){
+  if (transitLayer) { map.removeLayer(transitLayer); transitLayer = null; }
+  const line = TRANSIT_LINES[key];
+  if (!line) return;
+  transitLayer = L.polyline(line.coords, {
+    color: line.color, weight: 6, opacity: 0.9,
+    dashArray: line.dashed ? '2 10' : null, lineCap:'round'
+  }).addTo(map);
+  map.fitBounds(transitLayer.getBounds(), {padding:[60,60]});
+  closeModal();
+}
+function clearTransitLine(){
+  if (transitLayer) { map.removeLayer(transitLayer); transitLayer = null; }
+}
 
 const POINTS = {};
 PLACES.forEach(p => { POINTS[p.name] = CATS[p.cat].points; });
@@ -494,6 +592,87 @@ function updateProgress(){
   const pct = Math.round((pts / MAX_POINTS) * 100);
   document.getElementById('progressText').textContent = `${pts} / ${MAX_POINTS} pts · ${visited.size}/${PLACES.length}`;
   document.getElementById('progressBarFill').style.width = pct + '%';
+  syncRanking();
+}
+
+// ---------- RANKING COMPARTIDO (Firebase Firestore) ----------
+// 1) Pega aquí tu firebaseConfig (Firebase Console → ⚙️ Configuración del proyecto → Tus apps → Web).
+// 2) Mientras esto tenga "TU_API_KEY" el ranking compartido queda desactivado automáticamente
+//    y la app sigue funcionando en modo solo-local, sin dar error.
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCOMtm6UGqMfnqUu8aIdNF3aULcLBlTgBk",
+  authDomain: "olomouc-2026-dca3c.firebaseapp.com",
+  projectId: "olomouc-2026-dca3c",
+  storageBucket: "olomouc-2026-dca3c.firebasestorage.app",
+  messagingSenderId: "87040929426",
+  appId: "1:87040929426:web:0315a17940ac88efaa804b"
+};
+
+let db = null;
+let firebaseReady = false;
+try {
+  if (FIREBASE_CONFIG.apiKey !== "TU_API_KEY" && typeof firebase !== 'undefined') {
+    firebase.initializeApp(FIREBASE_CONFIG);
+    db = firebase.firestore();
+    firebaseReady = true;
+  }
+} catch(e) { console.warn('Firebase no disponible:', e); }
+
+const NICK_KEY = 'olomouc_nickname';
+function getNickname(){
+  try { return localStorage.getItem(NICK_KEY) || ''; } catch(e) { return ''; }
+}
+function setNickname(name){
+  try { localStorage.setItem(NICK_KEY, name); } catch(e) {}
+}
+function slugify(name){
+  return name.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').slice(0,40) || 'jugador';
+}
+function currentMonthKey(){
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+
+function askNicknameIfNeeded(cb){
+  const existing = getNickname();
+  if (existing) { if (cb) cb(existing); return; }
+  openModal(`
+    <h2>👋 ¿Cómo te llamas?</h2>
+    <p style="color:var(--slate);font-size:12.5px;">Así te reconocerán tus amigos en el ranking compartido. Puedes cambiarlo luego.</p>
+    <input id="nickInput" type="text" placeholder="Tu nombre" maxlength="24"
+      style="width:100%;padding:11px 14px;border-radius:10px;border:1px solid var(--line);font-size:14px;margin:12px 0;box-sizing:border-box;">
+    <button class="pop-btn" style="width:100%;" onclick="
+      const v = document.getElementById('nickInput').value.trim();
+      if(v){ setNickname(v); document.getElementById('modalOverlay').classList.remove('open'); syncRanking(); }
+    ">Guardar</button>
+  `);
+}
+
+let syncTimer = null;
+function syncRanking(){
+  if (!firebaseReady) return;
+  const nick = getNickname();
+  if (!nick) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(() => {
+    const monthKey = currentMonthKey();
+    db.collection('rankings').doc(monthKey).collection('players').doc(slugify(nick)).set({
+      name: nick,
+      points: currentPoints(),
+      visitedCount: visited.size,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, {merge:true}).catch(e => console.warn('No se pudo sincronizar el ranking:', e));
+  }, 800);
+}
+
+async function fetchRanking(){
+  if (!firebaseReady) return [];
+  const monthKey = currentMonthKey();
+  try {
+    const snap = await db.collection('rankings').doc(monthKey).collection('players')
+      .orderBy('points','desc').limit(50).get();
+    return snap.docs.map(d => d.data());
+  } catch(e) { console.warn('No se pudo leer el ranking:', e); return []; }
 }
 
 // ---------- MAP INIT (Leaflet) ----------
@@ -527,8 +706,6 @@ function buildChips(){
 function ratingText(r){ return (r === null || r === undefined) ? 'N/D' : r.toFixed(1); }
 
 // ---------- MARKERS ----------
-const markerRefs = {};
-
 function popupHtmlFor(p){
   const cat = CATS[p.cat];
   const dirUrl = `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}`;
@@ -546,7 +723,11 @@ function popupHtmlFor(p){
   `;
 }
 
-PLACES.forEach((p) => {
+const markerRefs = {};
+const CHUNK_SIZE = 18;
+let chunkIndex = 0;
+
+function createMarker(p){
   const cat = CATS[p.cat];
   const icon = L.divIcon({
     className: '',
@@ -556,7 +737,32 @@ PLACES.forEach((p) => {
   const marker = L.marker([p.lat, p.lng], {icon}).addTo(map);
   marker.bindPopup(popupHtmlFor(p), {maxWidth:260});
   markerRefs[p.name] = {marker};
-});
+}
+
+function loadMarkersChunk(){
+  const end = Math.min(chunkIndex + CHUNK_SIZE, PLACES.length);
+  for (let i = chunkIndex; i < end; i++) createMarker(PLACES[i]);
+  chunkIndex = end;
+  const loadingText = document.getElementById('loadingText');
+  if (loadingText) loadingText.textContent = `Cargando sitios… ${chunkIndex}/${PLACES.length}`;
+  if (chunkIndex < PLACES.length) {
+    requestAnimationFrame(loadMarkersChunk);
+  } else {
+    buildChips();
+    render();
+    updateProgress();
+    hideLoadingOverlay();
+    if (firebaseReady && !getNickname()) setTimeout(() => askNicknameIfNeeded(), 500);
+  }
+}
+requestAnimationFrame(loadMarkersChunk);
+
+function hideLoadingOverlay(){
+  const ov = document.getElementById('loadingOverlay');
+  if (!ov) return;
+  ov.style.opacity = '0';
+  setTimeout(() => { ov.style.display = 'none'; }, 350);
+}
 
 // Delegación: funciona aunque el contenido del popup se regenere tras marcar visitado
 document.addEventListener('click', (e) => {
@@ -647,10 +853,7 @@ function render(){
 }
 searchBox.addEventListener('input', render);
 searchBox.addEventListener('focus', () => { if (window.innerWidth <= 820) document.getElementById('sidebar').classList.add('expanded'); });
-
 buildChips();
-render();
-updateProgress();
 
 // ---------- CONTROLES MAPA ----------
 document.getElementById('btnReset').addEventListener('click', () => map.flyTo([49.5940, 17.2520], 13, {duration:0.8}));
@@ -683,6 +886,15 @@ document.getElementById('btnTransit').addEventListener('click', () => {
     <h2>🚌 Cómo moverte</h2>
     <p style="color:var(--slate);font-size:12.5px;">Tranvía, autobús y tren — dentro de Olomouc y hacia el resto de la región.</p>
 
+    <h3>Ver una línea en el mapa</h3>
+    <p style="margin-bottom:8px;">Toca una línea para que se dibuje iluminada sobre el mapa (trazado aproximado, construido con las paradas reales).</p>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px;">
+      ${Object.entries(TRANSIT_LINES).map(([key,l]) => `
+        <button class="pop-btn" style="flex:none;background:${l.color};" onclick="showTransitLine('${key}')">${l.label.split(' (')[0]}</button>
+      `).join('')}
+      <button class="pop-btn check" style="flex:none;" onclick="clearTransitLine()">Quitar del mapa</button>
+    </div>
+
     <h3>Dentro de la ciudad</h3>
     <p>7 líneas de tranvía + red de autobuses (DPMO), todas confluyen en <b>Hlavní nádraží</b> (estación central) y el centro histórico.</p>
     <ul>
@@ -702,6 +914,10 @@ document.getElementById('btnTransit').addEventListener('click', () => {
       <tr><td>Cracovia</td><td>Con transbordo, ~5h (o nocturno directo ~6h)</td></tr>
       <tr><td>Kroměříž</td><td>Tren o bus directo, ~1h</td></tr>
       <tr><td>Loštice</td><td>Tren vía Zábřeh, ~50 min</td></tr>
+      <tr><td>Šternberk</td><td>Tren directo, ~25 min</td></tr>
+      <tr><td>Litovel</td><td>Tren directo, ~25 min</td></tr>
+      <tr><td>Přerov</td><td>Tren directo, ~20 min</td></tr>
+      <tr><td>Prostějov</td><td>Tren o bus directo, ~25-30 min</td></tr>
     </table>
 
     <h3>Excursiones sin tren directo</h3>
@@ -721,6 +937,9 @@ document.getElementById('btnRanking').addEventListener('click', () => {
     return {label:c.label, icon:c.icon, done, total, color:c.color};
   }).filter(c => c.total > 0);
 
+  const nick = getNickname();
+  const monthLabel = new Date().toLocaleDateString('es-ES', {month:'long', year:'numeric'});
+
   openModal(`
     <button class="modal-close" onclick="document.getElementById('modalOverlay').classList.remove('open')">✕</button>
     <h2>🏆 Tu progreso</h2>
@@ -731,13 +950,41 @@ document.getElementById('btnRanking').addEventListener('click', () => {
       ${byCat.map(c => `<li style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
         <span style="width:8px;height:8px;border-radius:50%;background:${c.color};flex-shrink:0;"></span>
         <span style="flex:1;">${c.icon} ${c.label}</span>
-        <b style="color:${c.done===c.total?'var(--gold)':'var(--ink)'}">${c.done}/${c.total}</b>
+        <b style="color:${c.done===c.total?'var(--accent)':'var(--ink)'}">${c.done}/${c.total}</b>
       </li>`).join('')}
     </ul>
-    <h3>Ranking mensual entre amigos</h3>
-    <p>Este contador guarda tu progreso <b>solo en este móvil/navegador</b>. Para comparar puntos con tus amigos en tiempo real hace falta una base de datos compartida (gratis, tipo Firebase) — si la queréis montar, decídmelo y la añado encima de esto sin perder lo que ya tienes.</p>
-    <button class="pop-btn" style="width:100%;margin-top:6px;background:#B5453F;" onclick="if(confirm('¿Borrar todo tu progreso? No se puede deshacer.')){localStorage.removeItem('${STORAGE_KEY}');location.reload();}">Reiniciar mi progreso</button>
+
+    <h3>Ranking de ${monthLabel}</h3>
+    ${firebaseReady ? `
+      <p style="display:flex;justify-content:space-between;align-items:center;">
+        <span>Jugando como <b>${nick || '(sin nombre)'}</b></span>
+        <button class="pop-btn check" style="flex:none;padding:6px 10px;font-size:11px;" onclick="askNicknameIfNeeded()">Cambiar</button>
+      </p>
+      <div id="rankingList" style="margin-top:6px;">
+        <p style="color:var(--slate);">Cargando ranking…</p>
+      </div>
+    ` : `
+      <p>El ranking compartido aún no está activado — pega la configuración de Firebase en el código (busca <code>FIREBASE_CONFIG</code>) para que todos vuestros puntos se comparen aquí automáticamente.</p>
+    `}
+
+    <button class="pop-btn" style="width:100%;margin-top:14px;background:#B5453F;" onclick="if(confirm('¿Borrar todo tu progreso? No se puede deshacer.')){localStorage.removeItem('${STORAGE_KEY}');location.reload();}">Reiniciar mi progreso</button>
   `);
+
+  if (firebaseReady) {
+    fetchRanking().then(list => {
+      const el = document.getElementById('rankingList');
+      if (!el) return;
+      if (!list.length) { el.innerHTML = '<p style="color:var(--slate);">Nadie ha sumado puntos este mes todavía — ¡sé el primero!</p>'; return; }
+      const medals = ['🥇','🥈','🥉'];
+      el.innerHTML = `<ul style="list-style:none;padding:0;">` + list.map((p,i) => `
+        <li style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--line);">
+          <span style="width:22px;text-align:center;">${medals[i] || (i+1)}</span>
+          <span style="flex:1;font-weight:${p.name===nick?'800':'500'};">${p.name}${p.name===nick?' (tú)':''}</span>
+          <b>${p.points} pts</b>
+        </li>
+      `).join('') + `</ul>`;
+    });
+  }
 });
 </script>
 </body>
