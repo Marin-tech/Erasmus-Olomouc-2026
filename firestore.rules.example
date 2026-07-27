@@ -1,0 +1,20 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Prototipo para un grupo cerrado. Para producción, activa Firebase Auth
+    // y sustituye estas reglas por comprobaciones de request.auth.
+    match /rankings/{ranking}/players/{player} {
+      allow read, write: if true;
+    }
+    match /groups/{group} {
+      allow read, write: if true;
+      match /members/{member} { allow read, write: if true; }
+      match /plans/{plan} { allow read, write: if true; }
+    }
+    match /place_feedback/{place} {
+      allow read, write: if true;
+      match /comments/{comment} { allow read, write: if true; }
+      match /votes/{vote} { allow read, write: if true; }
+    }
+  }
+}
