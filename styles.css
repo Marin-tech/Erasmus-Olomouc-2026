@@ -1,172 +1,48 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-
-:root {
-  --bg-main: #f5f5f7;
-  --bg-surface: #ffffff;
-  --text-primary: #1d1d1f;
-  --text-secondary: #86868b;
-  --accent: #000000;
-  --border: rgba(0,0,0,0.06);
-  --radius-sm: 8px;
-  --radius-md: 16px;
-  --radius-lg: 24px;
-  --nav-height: 85px;
-}
-
-* {
-  box-sizing: border-box; margin: 0; padding: 0;
-  font-family: 'Inter', -apple-system, sans-serif;
-}
-
-body {
-  background-color: var(--bg-main); color: var(--text-primary);
-  overflow: hidden;
-}
-
-#appShell { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
-#mainContent { flex: 1; overflow-y: auto; padding-bottom: var(--nav-height); }
-
-/* Vistas */
-.view { display: none; padding: 16px; animation: fadeIn 0.3s ease; }
-.view.active { display: block; }
-@keyframes fadeIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
-
-/* Cabecera */
-.app-header { display: flex; justify-content: space-between; align-items: center; padding: 16px; background: rgba(245,245,247,0.8); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border); }
-.brand { background: none; border: none; display: flex; align-items: center; gap: 10px; text-align: left; }
-.brand-mark { background: var(--accent); color: #fff; padding: 6px 10px; border-radius: 8px; font-weight: 800; font-size: 14px; }
-.brand span { display: flex; flex-direction: column; }
-.brand strong { font-size: 16px; color: var(--text-primary); }
-.brand small { font-size: 11px; color: var(--text-secondary); font-weight: 500; }
-.header-actions { display: flex; align-items: center; gap: 12px; }
-.status-chip { font-size: 10px; font-weight: 800; text-transform: uppercase; padding: 4px 8px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-surface); }
-.icon-button { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 50%; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; }
-.icon-button.emergency { background: #ff3b30; color: #fff; width: auto; padding: 0 12px; border-radius: 16px; border: none; font-size: 11px; }
-.hidden { display: none !important; }
-
-/* Tipografía general */
-.eyebrow { font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
-h1 { font-size: 28px; font-weight: 800; letter-spacing: -1px; margin: 4px 0 8px; line-height: 1.1; }
-h2 { font-size: 20px; font-weight: 700; margin-bottom: 12px; letter-spacing: -0.5px; }
-p { color: var(--text-secondary); font-size: 15px; line-height: 1.5; }
-.topo-panel { padding: 24px 0; }
-.topo-panel.compact { padding: 16px 0; }
-
-/* Botones principales */
-.hero-actions, .agenda-actions { display: flex; gap: 12px; margin-top: 20px; }
-.primary-button, .secondary-button, .floating-list-button { padding: 14px 20px; border-radius: var(--radius-md); font-weight: 600; font-size: 14px; cursor: pointer; border: none; width: 100%; }
-.primary-button { background: var(--accent); color: #fff; }
-.secondary-button { background: #e5e5ea; color: var(--accent); }
-.secondary-button.small { padding: 8px 16px; width: auto; }
-.text-button { background: none; border: none; color: var(--text-secondary); font-weight: 600; font-size: 14px; cursor: pointer; }
-
-/* Level Card */
-.level-card { background: var(--bg-surface); border-radius: var(--radius-lg); padding: 16px; display: flex; align-items: center; gap: 16px; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-bottom: 24px; }
-.level-icon { width: 48px; height: 48px; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800; }
-.level-copy { flex: 1; }
-.section-kicker { font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; display: block; margin-bottom: 4px; }
-.progress-track { height: 6px; background: #e5e5ea; border-radius: 3px; margin: 8px 0 4px; overflow: hidden; }
-.progress-track span { display: block; height: 100%; background: var(--accent); width: 0%; }
-#levelText { font-size: 12px; color: var(--text-secondary); font-weight: 500; }
-
-/* Quick Grid */
-.quick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 32px; }
-.quick-card { background: var(--bg-surface); border: 1px solid var(--border); padding: 16px; border-radius: var(--radius-md); text-align: left; display: flex; flex-direction: column; gap: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); cursor: pointer; transition: transform 0.1s; }
-.quick-card:active { transform: scale(0.97); }
-.quick-card span { font-size: 24px; margin-bottom: 4px; }
-.quick-card strong { font-size: 14px; color: var(--text-primary); font-weight: 700; }
-.quick-card small { font-size: 11px; color: var(--text-secondary); font-weight: 500; }
-
-/* Títulos de sección */
-.section-heading { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 16px; margin-top: 32px; }
-.section-heading h2 { margin-bottom: 0; }
-
 /* =========================================
-   ARREGLO DE CAJAS GENERADAS POR APP.JS 
+   LAVADO DE CARA MODERNO (Minimalista & Limpio)
    ========================================= */
-.stack-list, .horizontal-cards, .route-grid, .agenda-list, .mission-list, .photo-grid, .ranking-list {
-  display: flex; flex-direction: column; gap: 12px;
-}
-.stack-list > *, .horizontal-cards > *, .route-grid > *, .agenda-list > *, .mission-list > *, .ranking-list > *, #groupPanel {
-  background: var(--bg-surface);
-  padding: 20px;
-  border-radius: var(--radius-md);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-  border: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-/* Textos arreglados (Fechas, descripciones, títulos) */
-.agenda-list strong, .agenda-list h3, .route-grid strong { font-size: 18px; font-weight: 800; color: var(--text-primary); line-height: 1.2; }
-.agenda-list small, .agenda-list span, .route-grid small, .route-grid p { font-size: 13px; color: var(--text-secondary); font-weight: 500; }
-/* Botón de compartir feo arreglado */
-.stack-list button, .horizontal-cards button, .route-grid button, .agenda-list button {
-  background-color: var(--accent);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  padding: 10px 16px;
-  font-weight: 700;
-  font-size: 13px;
-  margin-top: 8px;
-  cursor: pointer;
-  align-self: flex-start;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* 1. Tipografía y colores generales */
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  background-color: #f5f5f7 !important;
+  color: #1d1d1f !important;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* ========================================= */
+/* 2. Suavizar tarjetas y contenedores originales */
+.card, .route-card, .agenda-item, .level-card, .quick-card, .stat-card, 
+.stack-list > *, .horizontal-cards > *, .route-grid > *, .agenda-list > * {
+  border-radius: 16px !important;
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03) !important;
+  background: #ffffff !important;
+  transition: transform 0.15s ease;
+}
 
-/* Profile Grid */
-.profile-header { text-align: center; margin-bottom: 24px; display: flex; flex-direction: column; align-items: center; }
-.avatar { width: 80px; height: 80px; background: #e5e5ea; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; margin-bottom: 16px; }
-.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 32px; }
-.stat-card { background: var(--bg-surface); border-radius: var(--radius-md); padding: 16px 8px; text-align: center; border: 1px solid var(--border); }
-.stat-card strong { font-size: 18px; font-weight: 800; display: block; margin-bottom: 4px; }
-.stat-card span { font-size: 10px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; }
+/* 3. Modernizar la barra de navegación inferior (Efecto Glass) */
+.bottom-nav {
+  background: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border-top: 1px solid rgba(0, 0, 0, 0.06) !important;
+}
 
-/* Listas de ajustes (Settings) */
-.settings-list { background: var(--bg-surface); border-radius: var(--radius-md); border: 1px solid var(--border); overflow: hidden; padding: 0; }
-.settings-list button { width: 100%; display: flex; justify-content: space-between; padding: 16px; background: none; border: none; border-bottom: 1px solid var(--border); font-size: 14px; font-weight: 600; text-align: left; cursor: pointer; }
-.settings-list button:last-child { border-bottom: none; }
-.danger-row span { color: #ff3b30; }
+/* 4. Estilizar los botones manteniendo su función */
+button, .primary-button, .secondary-button, .text-button {
+  font-family: 'Inter', sans-serif !important;
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  transition: opacity 0.2s ease;
+}
 
-/* Mapa y Navegación Inferior */
-#view-map.active { display: flex; flex-direction: column; padding: 0; height: calc(100vh - var(--nav-height)); }
-.map-toolbar { padding: 12px 16px; display: flex; gap: 12px; background: var(--bg-main); }
-.search-field { flex: 1; display: flex; align-items: center; background: #e5e5ea; padding: 0 12px; border-radius: var(--radius-sm); }
-.search-field span { font-size: 18px; color: var(--text-secondary); }
-.search-field input { border: none; background: transparent; padding: 12px 8px; width: 100%; font-size: 14px; outline: none; }
-.round-action { background: var(--bg-surface); width: 42px; height: 42px; border-radius: 50%; font-size: 18px; font-weight: bold; border: 1px solid var(--border); cursor: pointer; }
-.scope-tabs, .filter-row { display: flex; padding: 0 16px 12px; gap: 8px; overflow-x: auto; background: var(--bg-main); scrollbar-width: none; }
-.scope-tabs::-webkit-scrollbar, .filter-row::-webkit-scrollbar { display: none; }
-.scope-tab { padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg-surface); font-size: 13px; font-weight: 600; color: var(--text-secondary); white-space: nowrap; cursor: pointer; }
-.scope-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-.filter-chip { padding: 6px 12px; background: #fff; border: 1px solid var(--border); border-radius: 8px; font-size: 12px; font-weight: 600; white-space: nowrap; color: var(--text-secondary); cursor: pointer; }
-.filter-chip.active { border-color: var(--accent); color: var(--accent); }
-#map { flex: 1; background: #e5e5ea; position: relative; z-index: 1; }
-.floating-list-button { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: auto; z-index: 400; box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
+button:active {
+  opacity: 0.8;
+}
 
-/* Pestañas (Segmented Apple) */
-.segmented { display: flex; background: #e5e5ea; padding: 4px; border-radius: 10px; margin-bottom: 16px; }
-.segmented button { flex: 1; padding: 8px; border: none; background: transparent; font-size: 13px; font-weight: 600; color: var(--text-secondary); border-radius: 8px; cursor: pointer; transition: 0.2s; }
-.segmented button.active { background: var(--bg-surface); color: var(--text-primary); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-
-/* Nav Flotante (Bottom) */
-.bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; display: flex; justify-content: space-around; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); background: rgba(255,255,255,0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 1px solid var(--border); z-index: 1000; }
-.bottom-nav button { background: none; border: none; display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-secondary); cursor: pointer; flex: 1; transition: color 0.2s; }
-.bottom-nav button span { font-size: 20px; }
-.bottom-nav button small { font-size: 10px; font-weight: 600; }
-.bottom-nav button.active { color: var(--accent); }
-
-/* Modales */
-.sheet-backdrop, .modal-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); opacity: 0; pointer-events: none; transition: 0.3s; z-index: 2000; }
-.sheet-backdrop.visible, .modal-backdrop.visible { opacity: 1; pointer-events: auto; }
-.bottom-sheet { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--bg-surface); border-radius: var(--radius-lg) var(--radius-lg) 0 0; padding: 24px; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1); z-index: 2001; max-height: 90vh; overflow-y: auto; }
-.bottom-sheet.visible { transform: translateY(0); }
-.sheet-handle { width: 40px; height: 5px; background: #e5e5ea; border-radius: 3px; margin: 0 auto 16px; }
-.modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -40%); width: 90%; max-width: 400px; background: var(--bg-surface); border-radius: var(--radius-lg); padding: 24px; opacity: 0; pointer-events: none; transition: 0.3s; z-index: 2001; }
-.modal.visible { transform: translate(-50%, -50%); opacity: 1; pointer-events: auto; }
-.modal-close, .sheet-close { position: absolute; top: 16px; right: 16px; background: #e5e5ea; border: none; width: 30px; height: 30px; border-radius: 15px; font-size: 18px; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); cursor: pointer; }
-.toast { position: fixed; bottom: calc(var(--nav-height) + 16px); left: 50%; transform: translateX(-50%) translateY(100px); background: rgba(0,0,0,0.85); color: #fff; padding: 12px 24px; border-radius: 20px; font-size: 14px; font-weight: 500; opacity: 0; transition: 0.3s; z-index: 3000; backdrop-filter: blur(10px); }
-.toast.visible { transform: translateX(-50%) translateY(0); opacity: 1; }
+/* 5. Limpieza de textos secundarios */
+small, p, .text-muted {
+  color: #86868b !important;
+}
