@@ -746,7 +746,7 @@ window.OQ_DATA = {
       "radius": 250
     },
     {
-      "name": "Facultad de Filosofía y Letras",
+      "name": "Facultad de Artes (Filosofía y Letras)",
       "cat": "faculty",
       "lat": 49.5950116,
       "lng": 17.2597325,
@@ -3177,11 +3177,11 @@ window.OQ_DATA = {
       "placeName": "Facultad de Educación (Pedagogická fakulta)"
     },
     {
-      "name": "Facultad de Filosofía y Letras",
+      "name": "Facultad de Artes (Filosofía y Letras)",
       "fromNeredin": "20–25 min",
       "fromEnvelopa": "10–14 min",
       "mode": "Tranvía + paseo / a pie",
-      "placeName": "Facultad de Filosofía y Letras"
+      "placeName": "Facultad de Artes (Filosofía y Letras)"
     },
     {
       "name": "Facultad de Teología",
