@@ -24,6 +24,7 @@
       </button>
       <div class="header-actions">
         <span id="networkBadge" class="status-chip online" aria-live="polite">En línea</span>
+        <button id="langBtn" class="icon-button language-button" type="button" title="Cambiar idioma" aria-label="Cambiar idioma">EN</button>
         <button id="installBtn" class="icon-button hidden" type="button" title="Instalar aplicación" aria-label="Instalar aplicación">＋</button>
         <button id="emergencyBtn" class="icon-button emergency" type="button" title="Emergencia" aria-label="Abrir ayuda de emergencia">SOS</button>
       </div>
@@ -72,6 +73,12 @@
         <section class="content-section">
           <div class="section-heading"><div><span class="section-kicker">Para ti</span><h2>Recomendaciones prácticas</h2></div><button class="text-button" data-view="map">Ver mapa</button></div>
           <div id="homeRecommendations" class="stack-list"></div>
+        </section>
+
+        <section id="residenceSection" class="content-section">
+          <div class="section-heading"><div><span class="section-kicker">Tu zona</span><h2>Cerca de tu residencia</h2></div><button class="text-button" data-action="edit-setup">Cambiar base</button></div>
+          <div id="residenceGuide" class="residence-guide"></div>
+          <div id="residencePlaces" class="stack-list"></div>
         </section>
 
         <section class="content-section">
