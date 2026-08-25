@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#244b3a">
-  <meta name="description" content="Olomouc Quest: mapa, rutas, agenda y comunidad Erasmus 2026/27.">
-  <title>Olomouc Quest · Erasmus 2026/27</title>
+  <meta name="theme-color" content="#153d30">
+  <meta name="description" content="Olomouc Quest: tu guía práctica para instalarte, moverte y hacer planes durante tu Erasmus en Olomouc.">
+  <title>Olomouc Quest · Tu Erasmus en Olomouc</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="icon" href="icons/icon-192.png">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="icon" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="preconnect" href="https://tile.openstreetmap.org">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.min.css">
@@ -20,10 +20,11 @@
     <header class="app-header">
       <button class="brand" data-view="home" aria-label="Ir al inicio">
         <span class="brand-mark">OQ</span>
-        <span><strong>Olomouc Quest</strong><small>Erasmus 2026/27</small></span>
+        <span><strong>Olomouc Quest</strong><small>Tu guía Erasmus</small></span>
       </button>
       <div class="header-actions">
         <span id="networkBadge" class="status-chip online" aria-live="polite">En línea</span>
+        <button id="langBtn" class="icon-button language-button" type="button" title="Cambiar idioma" aria-label="Cambiar idioma">EN</button>
         <button id="installBtn" class="icon-button hidden" type="button" title="Instalar aplicación" aria-label="Instalar aplicación">＋</button>
         <button id="emergencyBtn" class="icon-button emergency" type="button" title="Emergencia" aria-label="Abrir ayuda de emergencia">SOS</button>
       </div>
@@ -33,35 +34,55 @@
       <section id="view-home" class="view active" aria-labelledby="homeTitle">
         <div class="hero topo-panel">
           <div>
-            <span class="eyebrow">Una comunidad · dos residencias</span>
-            <h1 id="homeTitle">Tu Erasmus, organizado y al aire libre</h1>
-            <p>Descubre Olomouc, prepara escapadas, comparte planes y guarda recuerdos sin convertir la experiencia en una competición entre residencias.</p>
+            <span class="eyebrow">Todo lo importante · en un solo lugar</span>
+            <h1 id="homeTitle">Empieza bien tu Erasmus en Olomouc</h1>
+            <p>Resuelve tus primeros días, encuentra lo que necesitas y convierte cualquier descubrimiento en un plan con tu gente.</p>
           </div>
           <div class="hero-actions">
-            <button class="primary-button" data-view="map" type="button">Abrir mapa</button>
-            <button class="secondary-button" data-view="routes" type="button">Ver rutas</button>
+            <button class="primary-button" data-action="edit-setup" type="button">Personalizar mi guía</button>
+            <button class="secondary-button" data-view="map" type="button">Explorar cerca</button>
           </div>
         </div>
 
-        <section class="level-card" aria-label="Nivel y progreso">
-          <div class="level-icon" id="levelNumber">1</div>
+        <section class="level-card" aria-label="Configuración personal">
+          <div class="level-icon" id="setupIcon">⌂</div>
           <div class="level-copy">
-            <div class="section-kicker">Tu nivel</div>
-            <h2 id="levelName">Recién llegado</h2>
-            <div class="progress-track"><span id="levelProgress"></span></div>
-            <small id="levelText">0 puntos</small>
+            <div class="section-kicker">Tu base en Olomouc</div>
+            <h2 id="setupTitle">Configura residencia y facultad</h2>
+            <small id="setupSummary">Te mostraremos información relevante para ti.</small>
           </div>
+          <button class="text-button" data-action="edit-setup" type="button">Editar</button>
+        </section>
+
+        <section class="arrival-card" aria-labelledby="arrivalTitle">
+          <div class="arrival-head">
+            <div><span class="section-kicker">Primeras 72 horas</span><h2 id="arrivalTitle">Tu llegada, paso a paso</h2></div>
+            <strong id="arrivalCount">0/6</strong>
+          </div>
+          <div class="progress-track"><span id="arrivalProgress"></span></div>
+          <div id="arrivalChecklist" class="arrival-list"></div>
         </section>
 
         <div class="quick-grid">
           <button class="quick-card" id="nearMeHome" type="button"><span>◎</span><strong>Cerca de mí</strong><small>Lugares por distancia</small></button>
-          <button class="quick-card" id="transportHome" type="button"><span>🚋</span><strong>Transporte</strong><small>Residencias y facultades</small></button>
-          <button class="quick-card" id="groupsHome" type="button"><span>👥</span><strong>Mi grupo</strong><small>Planes y ranking privado</small></button>
-          <button class="quick-card" id="offlineHome" type="button"><span>⇩</span><strong>Sin conexión</strong><small>Instala y guarda el mapa</small></button>
+          <button class="quick-card" data-action="show-arrival" type="button"><span>✓</span><strong>Primeros días</strong><small>Tu checklist de llegada</small></button>
+          <button class="quick-card" id="transportHome" type="button"><span>🚋</span><strong>Cómo llegar</strong><small>Residencias y facultades</small></button>
+          <button class="quick-card" id="groupsHome" type="button"><span>👥</span><strong>Mi grupo</strong><small>Comparte planes privados</small></button>
         </div>
 
         <section class="content-section">
-          <div class="section-heading"><div><span class="section-kicker">Próximamente</span><h2>Agenda Erasmus</h2></div><button class="text-button" data-view="agenda">Ver todo</button></div>
+          <div class="section-heading"><div><span class="section-kicker">Para ti</span><h2>Recomendaciones prácticas</h2></div><button class="text-button" data-view="map">Ver mapa</button></div>
+          <div id="homeRecommendations" class="stack-list"></div>
+        </section>
+
+        <section id="residenceSection" class="content-section">
+          <div class="section-heading"><div><span class="section-kicker">Tu zona</span><h2>Cerca de tu residencia</h2></div><button class="text-button" data-action="edit-setup">Cambiar base</button></div>
+          <div id="residenceGuide" class="residence-guide"></div>
+          <div id="residencePlaces" class="stack-list"></div>
+        </section>
+
+        <section class="content-section">
+          <div class="section-heading"><div><span class="section-kicker">Próximamente</span><h2>Tus próximos planes</h2></div><button class="text-button" data-view="agenda">Ver todo</button></div>
           <div id="homeEvents" class="stack-list"></div>
         </section>
 
@@ -87,9 +108,9 @@
 
       <section id="view-routes" class="view" aria-labelledby="routesTitle">
         <div class="page-intro topo-panel compact">
-          <span class="eyebrow">Rutas preparadas</span>
-          <h1 id="routesTitle">Elige por tiempo, presupuesto y naturaleza</h1>
-          <p>Cada ruta incluye paradas, coste aproximado, transporte y un mensaje listo para compartir.</p>
+          <span class="eyebrow">Planes listos para compartir</span>
+          <h1 id="routesTitle">De descubrir una ruta a quedar con tu grupo</h1>
+          <p>Elige por tiempo y presupuesto, revisa las paradas y añádela directamente a tus planes.</p>
         </div>
         <div id="routeFilters" class="filter-row sticky-filters">
           <button class="filter-chip active" data-route-filter="all">Todas</button>
@@ -103,9 +124,9 @@
 
       <section id="view-agenda" class="view" aria-labelledby="agendaTitle">
         <div class="page-intro">
-          <span class="eyebrow">Agenda compartida</span>
-          <h1 id="agendaTitle">Fechas oficiales y planes del grupo</h1>
-          <p>La agenda oficial está precargada. Puedes añadir planes personales o compartirlos con tu grupo.</p>
+          <span class="eyebrow">Todo lo que vas a hacer</span>
+          <h1 id="agendaTitle">Planes oficiales, personales y de grupo</h1>
+          <p>Crea una quedada, guarda una ruta o comparte los próximos eventos sin perderlos entre mensajes.</p>
         </div>
         <div class="agenda-actions">
           <button id="addEventBtn" class="primary-button" type="button">＋ Añadir plan</button>
@@ -123,13 +144,13 @@
       <section id="view-profile" class="view" aria-labelledby="profileTitle">
         <div class="profile-header topo-panel compact">
           <div class="avatar" id="profileAvatar">?</div>
-          <div><span class="eyebrow">Perfil Erasmus</span><h1 id="profileTitle">Tu progreso</h1><p id="profileSummary">Configura tu nombre para aparecer en rankings y grupos.</p></div>
+          <div><span class="eyebrow">Pasaporte Erasmus</span><h1 id="profileTitle">Tu experiencia</h1><p id="profileSummary">Lugares, recuerdos y planes que forman tu Erasmus.</p></div>
           <button id="editNameBtn" class="secondary-button small" type="button">Editar</button>
         </div>
 
         <div class="stat-grid">
-          <div class="stat-card"><strong id="profilePoints">0</strong><span>Puntos</span></div>
-          <div class="stat-card"><strong id="profileVisits">0</strong><span>Visitas</span></div>
+          <div class="stat-card"><strong id="profilePoints">0</strong><span>Lugares</span></div>
+          <div class="stat-card"><strong id="profileVisits">0</strong><span>Planes</span></div>
           <div class="stat-card"><strong id="profileVerified">0</strong><span>Verificadas</span></div>
           <div class="stat-card"><strong id="profilePhotos">0</strong><span>Fotos</span></div>
         </div>
@@ -140,18 +161,8 @@
         </section>
 
         <section class="content-section">
-          <div class="section-heading"><div><span class="section-kicker">Progreso permanente</span><h2>Misiones</h2></div></div>
+          <div class="section-heading"><div><span class="section-kicker">Tu historia</span><h2>Colecciones</h2></div></div>
           <div id="missionsList" class="mission-list"></div>
-        </section>
-
-        <section class="content-section">
-          <div class="section-heading"><div><span class="section-kicker">Clasificación</span><h2>Ranking Erasmus</h2></div></div>
-          <div class="segmented" id="rankingTabs">
-            <button class="active" data-ranking="erasmus">Erasmus</button>
-            <button data-ranking="monthly">Mes</button>
-            <button data-ranking="group">Grupo</button>
-          </div>
-          <div id="rankingList" class="ranking-list"></div>
         </section>
 
         <section class="content-section">
@@ -172,8 +183,8 @@
       <button class="active" data-view="home"><span>⌂</span><small>Inicio</small></button>
       <button data-view="map"><span>⌖</span><small>Mapa</small></button>
       <button data-view="routes"><span>↗</span><small>Rutas</small></button>
-      <button data-view="agenda"><span>□</span><small>Agenda</small></button>
-      <button data-view="profile"><span>○</span><small>Perfil</small></button>
+      <button data-view="agenda"><span>□</span><small>Planes</small></button>
+      <button data-view="profile"><span>○</span><small>Pasaporte</small></button>
     </nav>
   </div>
 
