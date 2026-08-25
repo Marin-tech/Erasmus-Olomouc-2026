@@ -1,7 +1,7 @@
 {
-  "name": "Olomouc Quest · Erasmus 2026/27",
+  "name": "Olomouc Quest · Tu guía Erasmus",
   "short_name": "Olomouc Quest",
-  "description": "Mapa, rutas, agenda y comunidad Erasmus para Olomouc.",
+  "description": "Guía práctica para instalarte, moverte y hacer planes durante tu Erasmus en Olomouc.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
